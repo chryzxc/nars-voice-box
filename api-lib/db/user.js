@@ -1,10 +1,13 @@
-import bcrypt from 'bcryptjs';
 import { ObjectId } from 'mongodb';
+import bcrypt from 'bcryptjs';
+import { capitalizeFirstLetter } from '@/lib/utils';
 import normalizeEmail from 'validator/lib/normalizeEmail';
 
-export async function findUserWithEmailAndPassword(db, email, password) {
-  email = normalizeEmail(email);
-  const user = await db.collection('users').findOne({ email });
+export const temporaryPassword = 'nars-voice-box';
+
+export async function findUserWithUsernameAndPassword(db, username, password) {
+  // email = normalizeEmail(email);
+  const user = await db.collection('users').findOne({ username });
   if (user && (await bcrypt.compare(password, user.password))) {
     return { ...user, password: undefined }; // filtered out password
   }
@@ -53,21 +56,44 @@ export async function updateUserById(db, id, data) {
 
 export async function insertUser(
   db,
-  { email, originalPassword, bio = '', name, profilePicture, username }
+  { email = null, firstName, lastName, middleName, role }
 ) {
-  const user = {
-    emailVerified: false,
-    profilePicture,
-    email,
-    name,
-    username,
-    bio,
+  const generateUsername = () => {
+    const min = 0;
+    const max = 9;
+    const randomInt1 = Math.floor(Math.random() * (max - min + 1)) + min;
+    const randomInt2 = Math.floor(Math.random() * (max - min + 1)) + min;
+    return `${firstName.toLowerCase()}.${lastName.toLowerCase()}${randomInt1}${randomInt2}`;
   };
-  const password = await bcrypt.hash(originalPassword, 10);
-  const { insertedId } = await db
-    .collection('users')
-    .insertOne({ ...user, password });
-  user._id = insertedId;
+
+  const user = {
+    created: new Date(),
+    emailVerified: false,
+    temporaryPasswordChanged: false,
+    profilePicture: null,
+    email,
+    firstName: capitalizeFirstLetter(firstName),
+    lastName: capitalizeFirstLetter(lastName),
+    middleName: middleName ? capitalizeFirstLetter(middleName) : undefined,
+    role,
+  };
+  const password = await bcrypt.hash(temporaryPassword, 10);
+
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const username = generateUsername();
+    const existingUser = await findUserByUsername(db, username);
+
+    if (!existingUser) {
+      const { insertedId } = await db
+        .collection('users')
+        .insertOne({ ...user, username, password });
+      user._id = insertedId;
+      user.username = username;
+      break;
+    }
+  }
+
   return user;
 }
 
@@ -86,6 +112,14 @@ export async function updateUserPasswordByOldPassword(
     .collection('users')
     .updateOne({ _id: new ObjectId(id) }, { $set: { password } });
   return true;
+}
+
+export async function findUsers(db) {
+  const collection = db.collection('users'); // Replace 'users' with your actual collection name
+
+  // Fetch data from the collection
+  const data = await collection.find({}).toArray();
+  return data;
 }
 
 export async function UNSAFE_updateUserPassword(db, id, newPassword) {

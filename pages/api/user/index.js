@@ -1,12 +1,14 @@
-import { ValidateProps } from '@/api-lib/constants';
-import { findUserByUsername, updateUserById } from '@/api-lib/db';
 import { auths, validateBody } from '@/api-lib/middlewares';
-import { getMongoDb } from '@/api-lib/mongodb';
-import { ncOpts } from '@/api-lib/nc';
-import { slugUsername } from '@/lib/user';
+import { findUserByUsername, updateUserById } from '@/api-lib/db';
+
+import { ValidateProps } from '@/api-lib/constants';
+import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
+import { getMongoDb } from '@/api-lib/mongodb';
 import multer from 'multer';
 import nc from 'next-connect';
+import { ncOpts } from '@/api-lib/nc';
+import { slugUsername } from '@/lib/user';
 
 const upload = multer({ dest: '/tmp' });
 const handler = nc(ncOpts);
@@ -37,9 +39,14 @@ handler.patch(
   validateBody({
     type: 'object',
     properties: {
-      username: ValidateProps.user.username,
-      name: ValidateProps.user.name,
-      bio: ValidateProps.user.bio,
+      // username: ValidateProps.user.username,
+      // name: ValidateProps.user.name,
+      // bio: ValidateProps.user.bio,
+      firstName: ValidateProps.user.firstName,
+      middleName: ValidateProps.user.middleName,
+      lastName: ValidateProps.user.lastName,
+      password: ValidateProps.user.password,
+      role: ValidateProps.user.role,
     },
     additionalProperties: true,
   }),
@@ -60,7 +67,17 @@ handler.patch(
       });
       profilePicture = image.secure_url;
     }
-    const { name, bio } = req.body;
+    const { firstName, middleName, lastName, role, newPassword } = req.body;
+
+    let password;
+    let temporaryPasswordChanged;
+    if (!req.user.temporaryPasswordChanged) {
+      password = await bcrypt.hash(newPassword, 10);
+      temporaryPasswordChanged = true;
+      return res.status(401).json({
+        error: { message: 'The old password you entered is incorrect.' },
+      });
+    }
 
     let username;
 
@@ -79,8 +96,12 @@ handler.patch(
 
     const user = await updateUserById(db, req.user._id, {
       ...(username && { username }),
-      ...(name && { name }),
-      ...(typeof bio === 'string' && { bio }),
+      ...(firstName && { firstName }),
+      ...(middleName && { middleName }),
+      ...(lastName && { lastName }),
+      ...(role && { role }),
+      ...(password && { password }),
+      ...(temporaryPasswordChanged && { temporaryPasswordChanged }),
       ...(profilePicture && { profilePicture }),
     });
 

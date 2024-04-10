@@ -1,7 +1,8 @@
-import { findUserForAuth, findUserWithEmailAndPassword } from '@/api-lib/db';
-import passport from 'passport';
+import { findUserForAuth, findUserWithUsernameAndPassword } from '@/api-lib/db';
+
 import { Strategy as LocalStrategy } from 'passport-local';
 import { getMongoDb } from '../mongodb';
+import passport from 'passport';
 
 passport.serializeUser((user, done) => {
   done(null, user._id);
@@ -18,12 +19,16 @@ passport.deserializeUser((req, id, done) => {
 
 passport.use(
   new LocalStrategy(
-    { usernameField: 'email', passReqToCallback: true },
-    async (req, email, password, done) => {
+    { usernameField: 'username', passReqToCallback: true },
+    async (req, username, password, done) => {
       const db = await getMongoDb();
-      const user = await findUserWithEmailAndPassword(db, email, password);
+      const user = await findUserWithUsernameAndPassword(
+        db,
+        username,
+        password
+      );
       if (user) done(null, user);
-      else done(null, false, { message: 'Email or password is incorrect' });
+      else done(null, false, { message: 'Username or password is incorrect' });
     }
   )
 );

@@ -1,16 +1,17 @@
-import { Avatar } from '@/components/Avatar';
 import { Button, ButtonLink } from '@/components/Button';
-import { ThemeSwitcher } from '@/components/ThemeSwitcher';
-import { fetcher } from '@/lib/fetch';
-import { useCurrentUser } from '@/lib/user';
-import Link from 'next/link';
-import { useRouter } from 'next/router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import toast from 'react-hot-toast';
+
+import { Avatar } from '@/components/Avatar';
 import Container from './Container';
-import styles from './Nav.module.css';
+import Link from 'next/link';
 import Spacer from './Spacer';
+import { ThemeSwitcher } from '@/components/ThemeSwitcher';
 import Wrapper from './Wrapper';
+import { fetcher } from '@/lib/fetch';
+import styles from './Nav.module.css';
+import toast from 'react-hot-toast';
+import { useCurrentUser } from '@/lib/user';
+import { useRouter } from 'next/router';
 
 const UserMenu = ({ user, mutate }) => {
   const menuRef = useRef();
@@ -49,6 +50,7 @@ const UserMenu = ({ user, mutate }) => {
       });
       toast.success('You have been signed out');
       mutate({ user: null });
+      router.push('/');
     } catch (e) {
       toast.error(e.message);
     }

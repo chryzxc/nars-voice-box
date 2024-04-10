@@ -1,9 +1,10 @@
-import { ValidateProps } from '@/api-lib/constants';
-import { updateUserPasswordByOldPassword } from '@/api-lib/db';
 import { auths, validateBody } from '@/api-lib/middlewares';
+
+import { ValidateProps } from '@/api-lib/constants';
 import { getMongoDb } from '@/api-lib/mongodb';
-import { ncOpts } from '@/api-lib/nc';
 import nc from 'next-connect';
+import { ncOpts } from '@/api-lib/nc';
+import { updateUserPasswordByOldPassword } from '@/api-lib/db';
 
 const handler = nc(ncOpts);
 handler.use(...auths);

@@ -13,7 +13,7 @@ import { useCurrentUser } from '@/lib/user';
 import { useRouter } from 'next/router';
 
 const Login = () => {
-  const emailRef = useRef();
+  const usernameRef = useRef();
   const passwordRef = useRef();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -34,14 +34,14 @@ const Login = () => {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            email: emailRef.current.value,
+            username: usernameRef.current.value,
             password: passwordRef.current.value,
           }),
         });
         mutate({ user: response.user }, false);
         toast.success('You have been logged in.');
       } catch (e) {
-        toast.error('Incorrect email or password.');
+        toast.error('Incorrect username or password.');
       } finally {
         setIsLoading(false);
       }
@@ -56,11 +56,11 @@ const Login = () => {
         <h1 className={styles.title}>Login to App</h1>
         <form onSubmit={onSubmit}>
           <Input
-            ref={emailRef}
-            htmlType="email"
-            autoComplete="email"
-            placeholder="Email Address"
-            ariaLabel="Email Address"
+            ref={usernameRef}
+            htmlType="username"
+            autoComplete="username"
+            placeholder="Username"
+            ariaLabel="Username"
             size="large"
             required
           />

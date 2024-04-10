@@ -1,9 +1,13 @@
 import { MongoClient } from 'mongodb';
+import bcrypt from 'bcryptjs';
 
 let indexesCreated = false;
 async function createIndexes(client) {
   if (indexesCreated) return client;
   const db = client.db();
+
+  // Seeder logic for admin user
+
   await Promise.all([
     db
       .collection('tokens')
@@ -15,11 +19,38 @@ async function createIndexes(client) {
       .collection('comments')
       .createIndexes([{ key: { createdAt: -1 } }, { key: { postId: -1 } }]),
     db.collection('users').createIndexes([
-      { key: { email: 1 }, unique: true },
+      // { key: { email: 1 }, unique: true },
       { key: { username: 1 }, unique: true },
     ]),
   ]);
+
+  // Seeder logic for admin user
+  try {
+    // Check if there are any admin users
+    const adminUserCount = await db
+      .collection('users')
+      .countDocuments({ role: 'admin' });
+
+    // If no admin users found, create one
+    if (adminUserCount === 0) {
+      const password = await bcrypt.hash('admin_password', 10);
+      const adminUserData = {
+        username: 'admin',
+        password: password, // You might want to hash this password before storing it
+        role: 'admin',
+      };
+
+      // Insert the admin user into the database
+      await db.collection('users').insertOne(adminUserData);
+      console.log('Admin user seeded successfully.');
+    } else {
+      console.log('Admin user already exists.');
+    }
+  } catch (error) {
+    console.error('Error seeding admin user:', error);
+  }
   indexesCreated = true;
+
   return client;
 }
 
