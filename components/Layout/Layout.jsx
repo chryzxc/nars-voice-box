@@ -11,7 +11,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Fragment } from 'react';
-import { Input } from '@/components/ui/input1';
+import { Input } from '@/components/ui/input';
 import Loader from '../Loader';
 import { UserLayout } from '.';
 import { fetcher } from '@/lib/fetch';
