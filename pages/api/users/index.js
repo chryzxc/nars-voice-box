@@ -1,18 +1,10 @@
 import { auths, validateBody } from '@/api-lib/middlewares';
-import {
-  findUserByEmail,
-  findUserByUsername,
-  findUsers,
-  insertUser,
-} from '@/api-lib/db';
+import { findUsers, insertUser } from '@/api-lib/db';
 
 import { ValidateProps } from '@/api-lib/constants';
 import { getMongoDb } from '@/api-lib/mongodb';
-import isEmail from 'validator/lib/isEmail';
 import nc from 'next-connect';
 import { ncOpts } from '@/api-lib/nc';
-import normalizeEmail from 'validator/lib/normalizeEmail';
-import { slugUsername } from '@/lib/user';
 
 const handler = nc(ncOpts);
 

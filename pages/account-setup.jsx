@@ -13,7 +13,6 @@ import { Input } from '@/components/ui/input';
 import { fetcher } from '@/lib/fetch';
 import toast from 'react-hot-toast';
 import { useRouter } from 'next/router';
-import { userRole } from '@/lib/constants';
 
 const AccountSetup = () => {
   const router = useRouter();

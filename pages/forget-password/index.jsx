@@ -8,7 +8,6 @@ const ForgetPasswordPage = () => {
         <title>Forget password</title>
       </Head>
       <div>
-
         <p className="font-bold text-lg">Test123</p>
       </div>
       <ForgetPasswordIndex />

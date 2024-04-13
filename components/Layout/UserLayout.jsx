@@ -19,7 +19,6 @@ import SpeechRecognition, {
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { capitalizeFirstLetter, formatString } from '@/lib/utils';
@@ -83,6 +82,7 @@ const links = [
     href: '/appointments',
     isActive: false,
     roles: [
+      userRole.nurse,
       userRole.internal_family_doctor,
       userRole.neurologist,
       userRole.pediatric,
@@ -111,9 +111,9 @@ const bottomLinks = [
 
 const SpeechListener = () => {
   const {
-    transcript,
+    // transcript,
     listening,
-    resetTranscript,
+    // resetTranscript,
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition();
 
@@ -133,7 +133,7 @@ const SpeechListener = () => {
       <TooltipTrigger>
         {' '}
         <div className="flex justify-center items-center">
-          <span className="relative flex h-12 w-12">
+          <span className="relative flex h-10 w-10">
             <span
               className={`${
                 listening ? 'animate-ping' : ''
@@ -142,13 +142,13 @@ const SpeechListener = () => {
             {/* <span className="relative inline-flex rounded-full h-8 w-8 bg-blue-500"></span> */}
             <Avatar
               onClick={toggleSpeechListener}
-              className="relative inline-flex h-12 w-12"
+              className="relative inline-flex h-10 w-10"
             >
               <AvatarFallback>
                 <MicrophoneIcon
                   className={`${
                     listening ? 'text-red-500' : 'text-secondary'
-                  } m-3.5`}
+                  } m-2.5`}
                 />
               </AvatarFallback>
             </Avatar>
@@ -163,27 +163,6 @@ const SpeechListener = () => {
         </p>
       </TooltipContent>
     </Tooltip>
-
-    // <Avatar onClick={toggleSpeechListener}>
-    //   <AvatarFallback>
-    //     <MicrophoneIcon
-    //       height={25}
-    //       width={25}
-    //       color={listening ? 'red' : 'gray'}
-    //     />
-    //   </AvatarFallback>
-    // </Avatar>
-    // </div>
-  );
-  return (
-    <div>
-      <MicrophoneIcon />
-      <p>Microphone: {listening ? 'on' : 'off'}</p>
-      <button onClick={SpeechRecognition.startListening}>Start</button>
-      <button onClick={SpeechRecognition.stopListening}>Stop</button>
-      <button onClick={resetTranscript}>Reset</button>
-      <p>transcript: {transcript}</p>
-    </div>
   );
 };
 

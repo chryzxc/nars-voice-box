@@ -178,6 +178,7 @@ const Users = () => {
       <UserLayout.Content>
         <div>
           <CustomDataTable
+            loading={loading}
             title="Users"
             columns={columns}
             data={users}

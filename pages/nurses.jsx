@@ -125,6 +125,7 @@ const Nurses = () => {
   useEffect(() => {
     getData();
   }, [getData]);
+
   return (
     <>
       <Head>
@@ -133,6 +134,7 @@ const Nurses = () => {
       <UserLayout.Content>
         <div>
           <CustomDataTable
+            loading={loading}
             title="Nurse list"
             columns={columns}
             data={users}

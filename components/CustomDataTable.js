@@ -11,6 +11,7 @@ const CustomDataTable = ({
   showPagination,
   searchable,
   additionalHeader,
+  loading,
 }) => {
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
@@ -45,6 +46,10 @@ const CustomDataTable = ({
       </div>
     );
   }, [filterText, resetPaginationToggle, additionalHeader, searchable]);
+
+  if (loading) {
+    return <div>Loading</div>;
+  }
 
   return (
     <DataTable

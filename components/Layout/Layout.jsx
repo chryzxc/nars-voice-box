@@ -2,7 +2,6 @@ import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -76,11 +75,11 @@ const LoginButton = () => {
           Login
         </Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="w-[400px]">
         <DialogHeader>
           <DialogTitle>Login</DialogTitle>
         </DialogHeader>
-        <form onSubmit={onSubmit} className="flex flex-col gap-4">
+        <form onSubmit={onSubmit} className="flex flex-col gap-4 mt-6">
           <Input
             ref={usernameRef}
             htmlType="username"
@@ -115,19 +114,11 @@ const Layout = ({ children }) => {
   const { data: { user } = {}, mutate, isLoading } = useCurrentUser();
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (isLoading) return;
-  //   if (user) {
-  //     if (user && user.role === userRole.admin) {
-  //       router.replace('/dashboard');
-  //       return;
-  //     }
-  //     if (user && (!user.temporaryPasswordChanged || !user.role)) {
-  //       router.replace('/account-setup');
-  //       return;
-  //     }
-  //   }
-  // }, [user, router, isLoading]);
+  useEffect(() => {
+    if (!isLoading && !user && router.asPath !== '/') {
+      router.replace('/');
+    }
+  }, [user, router, isLoading]);
 
   const home = (
     <div className="min-h-full">
@@ -317,7 +308,7 @@ const Layout = ({ children }) => {
 
   if (!user) return home;
 
-  if (!user.temporaryPasswordChanged)
+  if (user.role !== userRole.admin && !user.temporaryPasswordChanged)
     return (
       <div className="h-screen w-screen flex justify-center mt-[40px]">
         {children}

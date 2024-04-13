@@ -1,5 +1,4 @@
 import CustomDataTable from '@/components/CustomDataTable';
-import DataTable from 'react-data-table-component';
 import Head from 'next/head';
 
 const columns = [
