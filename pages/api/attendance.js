@@ -12,7 +12,7 @@ handler.get(async (req, res) => {
 
   const attendance = await findAttendance(db);
 
-  res.json({ attendance });
+  res.json(attendance);
 });
 
 export default handler;

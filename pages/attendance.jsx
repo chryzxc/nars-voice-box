@@ -48,7 +48,7 @@ const Attendance = () => {
         });
       }
 
-      setAttendanceRecords(result.attendance);
+      setAttendanceRecords(result);
     } catch (e) {
       // do nothing
     } finally {

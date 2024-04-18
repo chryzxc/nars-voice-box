@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb';
 import { dbProjectionUsers } from '.';
 
-export async function findAttendance(db, userId, before, limit = 10) {
+export async function findAttendance(db, userId, before) {
   return db
-    .collection('attendance')
+    .collection('attendances')
     .aggregate([
       {
         $match: {
@@ -12,7 +12,7 @@ export async function findAttendance(db, userId, before, limit = 10) {
         },
       },
       { $sort: { _id: -1 } },
-      { $limit: limit },
+
       {
         $lookup: {
           from: 'users',
