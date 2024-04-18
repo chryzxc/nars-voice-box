@@ -1,13 +1,13 @@
 import { ObjectId } from 'mongodb';
 import { dbProjectionUsers } from '.';
 
-export async function findAttendances(db, userId, before, limit = 10) {
+export async function findAttendance(db, userId, before, limit = 10) {
   return db
-    .collection('attendances')
+    .collection('attendance')
     .aggregate([
       {
         $match: {
-          userId: new ObjectId(userId),
+          ...(userId && { userId: new ObjectId(userId) }),
           ...(before && { createdAt: { $lt: before } }),
         },
       },
@@ -35,7 +35,7 @@ export async function insertAttendance(db, postId, { content, creatorId }) {
     createdAt: new Date(),
   };
   const { insertedId } = await db
-    .collection('attendances')
+    .collection('attendance')
     .insertOne(attendance);
   attendance._id = insertedId;
   return attendance;
@@ -48,7 +48,7 @@ export async function timeIn(db, { userId }) {
     timeOut: null,
   };
   const { insertedId } = await db
-    .collection('attendances')
+    .collection('attendance')
     .insertOne(attendance);
   attendance._id = insertedId;
   return attendance;
@@ -56,7 +56,7 @@ export async function timeIn(db, { userId }) {
 
 export async function timeOut(db, attendanceId) {
   return db
-    .collection('attendances')
+    .collection('attendance')
     .findOneAndUpdate(
       { _id: new ObjectId(attendanceId) },
       { $set: { timeOut: new Date() } },

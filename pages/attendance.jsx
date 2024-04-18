@@ -5,10 +5,15 @@ import CustomDataTable from '@/components/CustomDataTable';
 import Head from 'next/head';
 import dayjs from 'dayjs';
 import { fetcher } from '@/lib/fetch';
+import { useCurrentUser } from '@/lib/user';
+import { userRole } from '@/lib/constants';
 
 const Attendance = () => {
+  const { data: { user } = {} } = useCurrentUser();
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const isNurse = user.role === userRole.nurse;
 
   const todaysTimeIn = useMemo(
     () =>
@@ -27,15 +32,21 @@ const Attendance = () => {
     [attendanceRecords]
   );
 
-  console.log({ todaysTimeIn, todaysTimeOut });
-
   const getData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetcher('/api/user/attendance', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      let result = [];
+      if (isNurse) {
+        result = await fetcher('/api/user/attendance', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      } else {
+        result = await fetcher('/api/attendance', {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+      }
 
       setAttendanceRecords(result.attendance);
     } catch (e) {
@@ -88,6 +99,13 @@ const Attendance = () => {
           title="Attendance Records"
           columns={[
             {
+              ...(!isNurse && {
+                name: 'Name',
+                selector: (row) => `${row.user.firstName} ${row.user.lastName}`,
+                sortable: true,
+              }),
+            },
+            {
               name: 'Time in',
               selector: (row) =>
                 row.timeIn ? dayjs(row.timeIn).format('hh:mm a') : null,
@@ -109,17 +127,19 @@ const Attendance = () => {
           showPagination
           searchable
           additionalHeader={
-            <div className="flex flex-row gap-1">
-              <Button onClick={handleTimeIn} disabled={todaysTimeIn}>
-                Time in
-              </Button>
-              <Button
-                onClick={handleTimeOut}
-                disabled={!todaysTimeIn || todaysTimeOut}
-              >
-                Time out
-              </Button>
-            </div>
+            isNurse ? (
+              <div className="flex flex-row gap-1">
+                <Button onClick={handleTimeIn} disabled={todaysTimeIn}>
+                  Time in
+                </Button>
+                <Button
+                  onClick={handleTimeOut}
+                  disabled={!todaysTimeIn || todaysTimeOut}
+                >
+                  Time out
+                </Button>
+              </div>
+            ) : undefined
           }
         />
       </div>

@@ -1,4 +1,13 @@
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -7,6 +16,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '@/components/ui/hover-card';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -14,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { capitalizeFirstLetter, formatDate, formatString } from 'lib/utils';
+import { temporaryPassword, userRole } from '@/lib/constants';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -21,10 +36,8 @@ import { Button } from '@/components/ui/button';
 import CustomDataTable from '@/components/CustomDataTable';
 import Head from 'next/head';
 import { Input } from '@/components/ui/input';
-import { UserLayout } from '@/components/Layout';
 import { fetcher } from '@/lib/fetch';
 import toast from 'react-hot-toast';
-import { userRole } from '@/lib/constants';
 
 const columns = [
   {
@@ -56,9 +69,20 @@ const columns = [
     name: 'Account setup',
     selector: (row) =>
       row.temporaryPasswordChanged ? (
-        <Badge className="bg-green-600">Done</Badge>
+        <Badge className="bg-green-600 cursor-pointer">Done</Badge>
       ) : (
-        <Badge className="bg-orange-600">Pending</Badge>
+        <HoverCard>
+          <HoverCardTrigger>
+            <Badge className="bg-orange-600 cursor-pointer">Pending</Badge>
+          </HoverCardTrigger>
+          <HoverCardContent>
+            <div>
+              <p className="text-md font-semibold">User credentials</p>
+              <p>Username: {row.username}</p>
+              <p>Password: {temporaryPassword}</p>
+            </div>
+          </HoverCardContent>
+        </HoverCard>
       ),
     sortable: true,
   },
@@ -76,6 +100,8 @@ const AddUserButton = ({ onUpdate }) => {
   const [role, setRole] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
+
+  const [newUser, setNewUser] = useState(null);
 
   const onSubmit = useCallback(
     async (e) => {
@@ -96,51 +122,78 @@ const AddUserButton = ({ onUpdate }) => {
 
         toast.success('Account has been created');
         setOpen(false);
-        onUpdate?.();
+        setNewUser(response);
       } catch (e) {
         toast.error(e.message);
       } finally {
         setIsLoading(false);
       }
     },
-    [role, onUpdate]
+    [role]
   );
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button>Add user</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="mb-4">Create user account</DialogTitle>
-          <form onSubmit={onSubmit}>
-            <DialogDescription className="flex flex-col gap-3">
-              <Input placeholder="First name" required ref={firstNameRef} />
-              <Input placeholder="Middle name (Optional)" ref={middleNameRef} />
-              <Input placeholder="Last name" required ref={lastNameRef} />
-              <Select onValueChange={setRole} required>
-                <SelectTrigger className="w-[180px]">
-                  <SelectValue placeholder="Select type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.values(userRole)
-                    .filter((val) => val !== userRole.admin)
-                    .map((val, idx) => (
-                      <SelectItem value={val} key={idx}>
-                        {capitalizeFirstLetter(formatString(val))}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-              <Button className="mt-4" type="submit" disabled={isLoading}>
-                Create
-              </Button>
-            </DialogDescription>
-          </form>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+    <>
+      <AlertDialog open={!!newUser}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>New user created</AlertDialogTitle>
+            <AlertDialogDescription>
+              <p>Username: {newUser?.username}</p>
+              <p>Password: {temporaryPassword}</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                setOpen(false);
+                setNewUser(null);
+                onUpdate?.();
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger>
+          <Button>Add user</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="mb-4">Create user account</DialogTitle>
+            <form onSubmit={onSubmit}>
+              <DialogDescription className="flex flex-col gap-3">
+                <Input placeholder="First name" required ref={firstNameRef} />
+                <Input
+                  placeholder="Middle name (Optional)"
+                  ref={middleNameRef}
+                />
+                <Input placeholder="Last name" required ref={lastNameRef} />
+                <Select onValueChange={setRole} required>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Select type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.values(userRole)
+                      .filter((val) => val !== userRole.admin)
+                      .map((val, idx) => (
+                        <SelectItem value={val} key={idx}>
+                          {capitalizeFirstLetter(formatString(val))}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+                <Button className="mt-4" type="submit" disabled={isLoading}>
+                  Create
+                </Button>
+              </DialogDescription>
+            </form>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };
 
@@ -175,19 +228,18 @@ const Users = () => {
       <Head>
         <title>Users</title>
       </Head>
-      <UserLayout.Content>
-        <div>
-          <CustomDataTable
-            loading={loading}
-            title="Users"
-            columns={columns}
-            data={users}
-            showPagination
-            searchable
-            additionalHeader={<AddUserButton onUpdate={getData} />}
-          />
-        </div>
-      </UserLayout.Content>
+
+      <div>
+        <CustomDataTable
+          loading={loading}
+          title="Users"
+          columns={columns}
+          data={users}
+          showPagination
+          searchable
+          additionalHeader={<AddUserButton onUpdate={getData} />}
+        />
+      </div>
     </>
   );
 };

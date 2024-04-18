@@ -1,25 +1,23 @@
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-
+import Doctor from '@/page-components/Appointment/Doctor';
 import Head from 'next/head';
-import moment from 'moment';
+import Nurse from '@/page-components/Appointment/Nurse';
+import { useCurrentUser } from '@/lib/user';
+import { userRole } from '@/lib/constants';
 
-const localizer = momentLocalizer(moment);
+const Appointments = () => {
+  const {
+    data: { user },
+  } = useCurrentUser();
 
-const Attendance = () => {
   return (
     <>
       <Head>
-        <title>Attendance</title>
+        <title>Appointments</title>
       </Head>
-      <Calendar
-        localizer={localizer}
-        events={[]}
-        startAccessor="start"
-        endAccessor="end"
-        style={{ height: 500 }}
-      />
+
+      {user.role === userRole.nurse ? <Nurse /> : <Doctor />}
     </>
   );
 };
 
-export default Attendance;
+export default Appointments;

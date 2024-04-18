@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import CustomDataTable from '@/components/CustomDataTable';
 import Head from 'next/head';
 import { Input } from '@/components/ui/input';
-import { UserLayout } from '@/components/Layout';
 import { fetcher } from '@/lib/fetch';
 import toast from 'react-hot-toast';
 import { userRole } from '@/lib/constants';
@@ -131,19 +130,18 @@ const Nurses = () => {
       <Head>
         <title>Nurses</title>
       </Head>
-      <UserLayout.Content>
-        <div>
-          <CustomDataTable
-            loading={loading}
-            title="Nurse list"
-            columns={columns}
-            data={users}
-            showPagination
-            searchable
-            additionalHeader={<AddNurseButton onUpdate={getData} />}
-          />
-        </div>
-      </UserLayout.Content>
+
+      <div>
+        <CustomDataTable
+          loading={loading}
+          title="Nurse list"
+          columns={columns}
+          data={users}
+          showPagination
+          searchable
+          additionalHeader={<AddNurseButton onUpdate={getData} />}
+        />
+      </div>
     </>
   );
 };

@@ -22,6 +22,9 @@ async function createIndexes(client) {
       // { key: { email: 1 }, unique: true },
       { key: { username: 1 }, unique: true },
     ]),
+    db
+      .collection('default_time_slots')
+      .createIndexes([{ key: { userId: -1 } }]),
   ]);
 
   // Seeder logic for admin user

@@ -9,10 +9,18 @@ export const ValidateProps = {
     email: { type: 'string', minLength: 1 },
     bio: { type: 'string', minLength: 0, maxLength: 160 },
   },
-  // post: {
-  //   content: { type: 'string', minLength: 1, maxLength: 280 },
-  // },
-  // comment: {
-  //   content: { type: 'string', minLength: 1, maxLength: 280 },
-  // },
+  schedule: {
+    date: { type: 'string' },
+    timeSlots: { type: 'array', items: { type: 'string' } },
+  },
+  appointment: {
+    doctorType: { type: 'string' },
+    doctorUserId: { type: 'string' },
+    date: { type: 'string' },
+    time: { type: 'string' },
+    patientName: { type: 'string' },
+    patientContactInformation: { type: 'string' },
+    patientAddress: { type: 'string' },
+    notes: { type: 'string' },
+  },
 };

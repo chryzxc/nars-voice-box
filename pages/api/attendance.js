@@ -9,8 +9,8 @@ handler.use(...auths);
 
 handler.get(async (req, res) => {
   const db = await getMongoDb();
-  console.log({ userId: req.user._id });
-  const attendance = await findAttendance(db, req.user._id);
+
+  const attendance = await findAttendance(db);
 
   res.json({ attendance });
 });

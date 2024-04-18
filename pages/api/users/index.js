@@ -53,9 +53,7 @@ handler.post(
       role,
     });
 
-    res.status(201).json({
-      user,
-    });
+    res.status(201).json(user);
     // req.logIn(user, (err) => {
     //   if (err) throw err;
     //   res.status(201).json({

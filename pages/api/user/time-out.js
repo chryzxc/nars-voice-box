@@ -1,4 +1,4 @@
-import { findAttendances, timeOut } from '@/api-lib/db/attendance';
+import { findAttendance, timeOut } from '@/api-lib/db/attendance';
 
 import { auths } from '@/api-lib/middlewares';
 import dayjs from 'dayjs';
@@ -15,11 +15,10 @@ handler.post(...auths, async (req, res) => {
 
   const db = await getMongoDb();
 
-  const attendances = await findAttendances(db, req.user._id);
-  const todaysAttendance = attendances.find((attendance) =>
+  const existingAttendance = await findAttendance(db, req.user._id);
+  const todaysAttendance = existingAttendance.find((attendance) =>
     dayjs().isSame(dayjs(attendance.timeIn), 'day')
   );
-  console.log('todays attendnace', { attendances, todaysAttendance });
 
   if (!todaysAttendance) {
     return res.status(400).end();

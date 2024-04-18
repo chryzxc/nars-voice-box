@@ -4,6 +4,7 @@ module.exports = {
   content: [
     './pages/**/*.{js,jsx}',
     './components/**/*.{js,jsx}',
+    './page-components/**/*.{js,jsx}',
     './@/components/**/*.{js,jsx}',
   ],
   prefix: '',

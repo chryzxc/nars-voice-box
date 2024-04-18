@@ -2,8 +2,7 @@ import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { capitalizeFirstLetter } from '@/lib/utils';
 import normalizeEmail from 'validator/lib/normalizeEmail';
-
-export const temporaryPassword = 'nars-voice-box';
+import { temporaryPassword } from '@/lib/constants';
 
 export async function findUserWithUsernameAndPassword(db, username, password) {
   // email = normalizeEmail(email);

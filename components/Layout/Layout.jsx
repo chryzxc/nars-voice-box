@@ -71,7 +71,10 @@ const LoginButton = () => {
   return (
     <Dialog>
       <DialogTrigger>
-        <Button className="uppercase" variant="outline">
+        <Button
+          className="uppercase border-secondary border-2 text-secondary"
+          variant="outline"
+        >
           Login
         </Button>
       </DialogTrigger>
