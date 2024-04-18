@@ -10,12 +10,10 @@ const handler = nc(ncOpts);
 
 handler.get(async (req, res) => {
   const db = await getMongoDb();
-  console.log({
-    doctorUserId: req.query.doctorUserId,
-    date: req.query.date,
-  });
+
   try {
     const appointments = await findAppointments(db, {
+      creatorId: req.query.creatorId,
       doctorUserId: req.query.doctorUserId,
       date: req.query.date,
     });

@@ -39,6 +39,7 @@ import { fetcher } from '@/lib/fetch';
 import moment from 'moment';
 import theme from '@/styles/theme';
 import toast from 'react-hot-toast';
+import { useCurrentUser } from '@/lib/user';
 import { useForm } from 'react-hook-form';
 import { userRole } from '@/lib/constants';
 import { z } from 'zod';
@@ -47,6 +48,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 const localizer = momentLocalizer(moment);
 
 const Nurse = () => {
+  const { data: { user } = {} } = useCurrentUser();
   const [isCreatingAppointment, setIsCreatingAppointment] = useState(false);
   const [bookedAppointments, setBookedAppointments] = useState([]);
   const [selectedAppointment, setSelectedApppointment] = useState(null);
@@ -54,10 +56,13 @@ const Nurse = () => {
   useEffect(() => {
     const getBookedAppointments = async () => {
       try {
-        const bookedAppointmentsResult = await fetcher(`/api/appointment`, {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
+        const bookedAppointmentsResult = await fetcher(
+          `/api/appointment?creatorId=${user._id}`,
+          {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          }
+        );
         setBookedAppointments(
           bookedAppointmentsResult.map((bookedAppointment) => ({
             id: 1,
@@ -98,6 +103,13 @@ const Nurse = () => {
             </Button>
           </div>
           <Calendar
+            eventPropGetter={() => {
+              return {
+                style: {
+                  backgroundColor: theme.primary,
+                },
+              };
+            }}
             localizer={localizer}
             events={bookedAppointments}
             startAccessor="start"

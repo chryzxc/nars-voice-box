@@ -84,6 +84,34 @@ const Attendance = () => {
     }
   };
 
+  const columns = [
+    {
+      name: 'Time in',
+      selector: (row) =>
+        row.timeIn ? dayjs(row.timeIn).format('hh:mm a') : null,
+      sortable: true,
+    },
+    {
+      name: 'Time out',
+      selector: (row) =>
+        row.timeOut ? dayjs(row.timeOut).format('hh:mm a') : null,
+      sortable: true,
+    },
+    {
+      name: 'Date',
+      selector: (row) => dayjs(row.timeIn).format('MMM DD, YYYY'),
+      sortable: true,
+    },
+  ];
+
+  if (!isNurse) {
+    columns.unshift({
+      name: 'Name',
+      selector: (row) => `${row.user.firstName} ${row.user.lastName}`,
+      sortable: true,
+    });
+  }
+
   useEffect(() => {
     getData();
   }, [getData]);
@@ -97,32 +125,7 @@ const Attendance = () => {
         <CustomDataTable
           loading={loading}
           title="Attendance Records"
-          columns={[
-            {
-              ...(!isNurse && {
-                name: 'Name',
-                selector: (row) => `${row.user.firstName} ${row.user.lastName}`,
-                sortable: true,
-              }),
-            },
-            {
-              name: 'Time in',
-              selector: (row) =>
-                row.timeIn ? dayjs(row.timeIn).format('hh:mm a') : null,
-              sortable: true,
-            },
-            {
-              name: 'Time out',
-              selector: (row) =>
-                row.timeOut ? dayjs(row.timeOut).format('hh:mm a') : null,
-              sortable: true,
-            },
-            {
-              name: 'Date',
-              selector: (row) => dayjs(row.timeIn).format('MMM DD, YYYY'),
-              sortable: true,
-            },
-          ]}
+          columns={columns}
           data={attendanceRecords}
           showPagination
           searchable

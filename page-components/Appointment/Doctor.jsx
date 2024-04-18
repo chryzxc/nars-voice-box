@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Fragment, useCallback, useEffect, useState } from 'react';
+import { capitalizeFirstLetter, formatHourInDate } from '@/lib/utils';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -23,6 +24,7 @@ import { fetcher } from '@/lib/fetch';
 import moment from 'moment';
 import theme from '@/styles/theme';
 import toast from 'react-hot-toast';
+import { useCurrentUser } from '@/lib/user';
 
 const localizer = momentLocalizer(moment);
 
@@ -311,11 +313,16 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
 };
 
 const Doctor = () => {
+  const { data: { user } = {} } = useCurrentUser();
+
   const [loading, setLoading] = useState(true);
   const [isSettingSchedule, setIsSettingSchedule] = useState(false);
   const [openDefaultTimeSlot, setOpenDefaultTimeSlot] = useState(true);
   const [hasDefaultTimeSlots, setHasDefaultTimeSlots] = useState(false);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
+
+  const [bookedAppointments, setBookedAppointments] = useState([]);
+  const [selectedAppointment, setSelectedApppointment] = useState(null);
 
   const selectTimeSlot = (timeSlot) => {
     if (selectedTimeSlots.includes(timeSlot)) {
@@ -349,7 +356,33 @@ const Doctor = () => {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
-      console.log('timeSlots', timeSlots);
+
+      const bookedAppointmentsResult = await fetcher(
+        `/api/appointment?doctorUserId=${user._id}`,
+        {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
+
+      setBookedAppointments(
+        bookedAppointmentsResult.map((bookedAppointment) => ({
+          id: 1,
+          title: `${capitalizeFirstLetter(bookedAppointment.patientName)} (${
+            bookedAppointment.time
+          })`,
+          start: new Date(
+            formatHourInDate(bookedAppointment.date, bookedAppointment.time)
+          ),
+          end: new Date(
+            formatHourInDate(
+              bookedAppointment.date,
+              bookedAppointment.time,
+              true
+            )
+          ),
+        })) || []
+      );
 
       if (!timeSlots?.length) {
         setSelectedTimeSlots(
@@ -366,7 +399,7 @@ const Doctor = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user._id]);
 
   useEffect(() => {
     getData();
@@ -385,10 +418,6 @@ const Doctor = () => {
           <form onSubmit={handleSetDefaultTimeSlots}>
             <DialogHeader>
               <DialogTitle>Set your default working time slots</DialogTitle>
-              <DialogDescription>
-                This action cannot be undone. This will permanently delete your
-                account and remove your data from our servers.
-              </DialogDescription>
             </DialogHeader>
             <div className="flex flex-col gap-2">
               <p className="text-primary font-medium">Morning</p>
@@ -465,8 +494,15 @@ const Doctor = () => {
             </Button>
           </div>
           <Calendar
+            eventPropGetter={() => {
+              return {
+                style: {
+                  backgroundColor: theme.primary,
+                },
+              };
+            }}
             localizer={localizer}
-            events={[]}
+            events={bookedAppointments}
             startAccessor="start"
             endAccessor="end"
             style={{ height: 500 }}

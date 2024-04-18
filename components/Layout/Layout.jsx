@@ -117,12 +117,6 @@ const Layout = ({ children }) => {
   const { data: { user } = {}, mutate, isLoading } = useCurrentUser();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!isLoading && !user && router.asPath !== '/') {
-      router.replace('/');
-    }
-  }, [user, router, isLoading]);
-
   const home = (
     <div className="min-h-full">
       <Disclosure as="nav" className="bg-white">
@@ -160,14 +154,6 @@ const Layout = ({ children }) => {
                 </div>
                 <div className="hidden md:block">
                   <div className="ml-4 flex items-center md:ml-6">
-                    {/* <button
-                      type="button"
-                      className="relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                    >
-                      <span className="absolute -inset-1.5" />
-                      <span className="sr-only">View notifications</span>
-                      <BellIcon className="h-6 w-6" aria-hidden="true" />
-                    </button> */}
                     <LoginButton />
 
                     {/* Profile dropdown */}
@@ -309,7 +295,13 @@ const Layout = ({ children }) => {
 
   if (isLoading) return <Loader />;
 
-  if (!user) return home;
+  if (!user) {
+    if (router.asPath !== '/') {
+      router.replace('/');
+      return;
+    }
+    return home;
+  }
 
   if (user.role !== userRole.admin && !user.temporaryPasswordChanged)
     return (
