@@ -1,4 +1,13 @@
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -6,7 +15,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { temporaryPassword, userRole } from '@/lib/constants';
 
 import { Button } from '@/components/ui/button';
 import CustomDataTable from '@/components/CustomDataTable';
@@ -14,7 +24,6 @@ import Head from 'next/head';
 import { Input } from '@/components/ui/input';
 import { fetcher } from '@/lib/fetch';
 import toast from 'react-hot-toast';
-import { userRole } from '@/lib/constants';
 
 const columns = [
   {
@@ -46,56 +55,82 @@ const AddNurseButton = ({ onUpdate }) => {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const onSubmit = useCallback(
-    async (e) => {
-      e.preventDefault();
-      try {
-        setIsLoading(true);
-        const response = await fetcher('/api/users', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            firstName: firstNameRef.current.value,
-            middleName: middleNameRef.current.value,
-            lastName: lastNameRef.current.value,
-            role: userRole.nurse,
-          }),
-        });
-        console.log('response', response);
+  const [newUser, setNewUser] = useState(null);
 
-        toast.success('Account has been created');
-        onUpdate?.();
-        setOpen(false);
-      } catch (e) {
-        toast.error(e.message);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [onUpdate]
-  );
+  const onSubmit = useCallback(async (e) => {
+    e.preventDefault();
+    try {
+      setIsLoading(true);
+      const response = await fetcher('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: firstNameRef.current.value,
+          middleName: middleNameRef.current.value,
+          lastName: lastNameRef.current.value,
+          role: userRole.nurse,
+        }),
+      });
+      console.log('response', response);
+
+      toast.success('Account has been created');
+      setOpen(false);
+      setNewUser(response);
+    } catch (e) {
+      toast.error(e.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button>Add nurse</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle className="mb-4">Create nurse account</DialogTitle>
-          <form onSubmit={onSubmit}>
-            <DialogDescription className="flex flex-col gap-3">
-              <Input placeholder="First name" required ref={firstNameRef} />
-              <Input placeholder="Middle name (Optional)" ref={middleNameRef} />
-              <Input placeholder="Last name" required ref={lastNameRef} />
-              <Button className="mt-4" type="submit" disabled={isLoading}>
-                Create
-              </Button>
-            </DialogDescription>
-          </form>
-        </DialogHeader>
-      </DialogContent>
-    </Dialog>
+    <Fragment>
+      <AlertDialog open={!!newUser}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>New nurse account created</AlertDialogTitle>
+            <AlertDialogDescription>
+              <p>Username: {newUser?.username}</p>
+              <p>Password: {temporaryPassword}</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction
+              onClick={() => {
+                setOpen(false);
+                setNewUser(null);
+                onUpdate?.();
+              }}
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogTrigger>
+          <Button>Add nurse</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="mb-4">Create nurse account</DialogTitle>
+            <form onSubmit={onSubmit}>
+              <DialogDescription className="flex flex-col gap-3">
+                <Input placeholder="First name" required ref={firstNameRef} />
+                <Input
+                  placeholder="Middle name (Optional)"
+                  ref={middleNameRef}
+                />
+                <Input placeholder="Last name" required ref={lastNameRef} />
+                <Button className="mt-4" type="submit" disabled={isLoading}>
+                  Create
+                </Button>
+              </DialogDescription>
+            </form>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
+    </Fragment>
   );
 };
 

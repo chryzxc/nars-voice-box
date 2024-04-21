@@ -124,7 +124,9 @@ export default function UserLayout({ mutate, user, content }) {
             <Link href="/">
               <div className="flex items-center gap-2 font-semibold">
                 <Mic className="h-6 w-6 text-secondary" />
-                <span className="">NarsVoiceBox</span>
+                <span className="text-primary font-bold text-xl tracking-tighter">
+                  NarsVoiceBox
+                </span>
               </div>
             </Link>
           </div>
@@ -169,8 +171,10 @@ export default function UserLayout({ mutate, user, content }) {
               <nav className="grid gap-2 text-lg font-medium">
                 <Link href="#">
                   <div className="flex items-center gap-2 text-lg font-semibold">
-                    <Mic className="h-6 w-6" />
-                    <span className="sr-only">NarsVoiceBox</span>
+                    <Mic className="h-6 w-6 text-secondary" />
+                    <span className="text-primary font-bold text-xl tracking-tighter">
+                      NarsVoiceBox
+                    </span>
                   </div>
                 </Link>
                 {links
@@ -189,8 +193,12 @@ export default function UserLayout({ mutate, user, content }) {
             </SheetContent>
           </Sheet>
 
-          <SpeechListener />
-          <DropdownMenu>
+          {user.role !== userRole.admin ? (
+            <SpeechListener />
+          ) : (
+            <div className="flex-1" />
+          )}
+          <DropdownMenu className="flex">
             <DropdownMenuTrigger asChild>
               <div className="flex flex-row gap-4">
                 <div className="flex flex-row gap-2  justify-center items-center">
