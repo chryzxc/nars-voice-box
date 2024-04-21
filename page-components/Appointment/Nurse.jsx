@@ -127,7 +127,7 @@ const CreateAppointment = ({ onCancel }) => {
   const [loading, setLoading] = useState(true);
   const [doctors, setDoctors] = useState([]);
   const [bookedAppointments, setBookedAppointments] = useState([]);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(moment().add(1, 'day'));
 
   const formSchema = z.object({
     doctorType: z
@@ -184,8 +184,6 @@ const CreateAppointment = ({ onCancel }) => {
       setLoading(false);
     }
   }
-
-  const handleSelectDate = ({ start }) => setSelectedDate(start);
 
   useEffect(() => {
     form.resetField('doctorUserId');
@@ -264,14 +262,11 @@ const CreateAppointment = ({ onCancel }) => {
         <div className="col-span-2">
           <Calendar
             dayPropGetter={(date) => {
+              const isSame = moment(date).isSame(moment(selectedDate), 'day');
               return {
                 style: {
-                  border: dayjs(date).isSame(dayjs(selectedDate))
-                    ? `solid ${theme.secondary} 1px`
-                    : undefined,
-                  backgroundColor: dayjs(date).isSame(dayjs(selectedDate))
-                    ? theme.secondary
-                    : undefined,
+                  border: isSame ? `solid ${theme.secondary} 1px` : undefined,
+                  backgroundColor: isSame ? theme.secondary : undefined,
                 },
               };
             }}
