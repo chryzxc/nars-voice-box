@@ -139,7 +139,7 @@ export const Attendance = ({ speechRecognitionKeyword }) => {
           showPagination
           searchable={!speechRecognitionKeyword}
           additionalHeader={
-            isNurse ? (
+            isNurse && !speechRecognitionKeyword ? (
               <div className="flex flex-row gap-1">
                 <Button onClick={handleTimeIn} disabled={todaysTimeIn}>
                   Time in
