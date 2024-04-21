@@ -8,7 +8,7 @@ import { fetcher } from '@/lib/fetch';
 import { useCurrentUser } from '@/lib/user';
 import { userRole } from '@/lib/constants';
 
-const Attendance = () => {
+export const Attendance = ({ speechRecognitionKeyword }) => {
   const { data: { user } = {} } = useCurrentUser();
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -48,13 +48,22 @@ const Attendance = () => {
         });
       }
 
+      if (speechRecognitionKeyword) {
+        setAttendanceRecords(
+          result.filter((data) =>
+            JSON.stringify(data).includes(speechRecognitionKeyword)
+          )
+        );
+        return;
+      }
+
       setAttendanceRecords(result);
     } catch (e) {
       // do nothing
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isNurse, speechRecognitionKeyword]);
 
   const handleTimeIn = async () => {
     try {
@@ -124,11 +133,11 @@ const Attendance = () => {
       <div>
         <CustomDataTable
           loading={loading}
-          title="Attendance Records"
+          title={speechRecognitionKeyword ? '' : 'Attendance Records'}
           columns={columns}
           data={attendanceRecords}
           showPagination
-          searchable
+          searchable={!speechRecognitionKeyword}
           additionalHeader={
             isNurse ? (
               <div className="flex flex-row gap-1">

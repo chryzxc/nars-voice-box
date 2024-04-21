@@ -5,7 +5,6 @@ import {
   CalendarDaysIcon,
   ChevronDownIcon,
   DocumentIcon,
-  MicrophoneIcon,
   Squares2X2Icon,
   UserGroupIcon,
   UsersIcon,
@@ -18,14 +17,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Menu, Mic } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import SpeechRecognition, {
-  useSpeechRecognition,
-} from 'react-speech-recognition';
-import { Tooltip, TooltipContent, TooltipTrigger } from '../ui/tooltip';
 import { capitalizeFirstLetter, formatString } from '@/lib/utils';
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import SpeechListener from '../SpeechListener';
 import { fetcher } from '@/lib/fetch';
 import toast from 'react-hot-toast';
 import { useCallback } from 'react';
@@ -101,62 +97,6 @@ const links = [
     roles: [userRole.admin],
   },
 ];
-
-const SpeechListener = () => {
-  const {
-    // transcript,
-    listening,
-    // resetTranscript,
-    browserSupportsSpeechRecognition,
-  } = useSpeechRecognition();
-
-  const toggleSpeechListener = () => {
-    console.log('clicked');
-    listening
-      ? SpeechRecognition.stopListening()
-      : SpeechRecognition.startListening();
-  };
-
-  if (!browserSupportsSpeechRecognition) {
-    return <span>{`Browser doesn't support speech recognition.`}</span>;
-  }
-  return (
-    // <div className="bg-gray-200 px-3.5 py-2 rounded-full flex justify-center items-center animate-pulse">
-    <Tooltip>
-      <TooltipTrigger>
-        <div className="flex justify-center items-center">
-          <span className="relative flex h-11 w-11">
-            <span
-              className={`${
-                listening ? 'animate-ping' : ''
-              } absolute inline-flex h-full w-full rounded-full bg-primary opacity-75`}
-            ></span>
-            {/* <span className="relative inline-flex rounded-full h-8 w-8 bg-blue-500"></span> */}
-            <Avatar
-              onClick={toggleSpeechListener}
-              className="relative inline-flex h-11 w-11"
-            >
-              <AvatarFallback>
-                <MicrophoneIcon
-                  className={`${
-                    listening ? 'text-red-500' : 'text-secondary'
-                  } m-2.5`}
-                />
-              </AvatarFallback>
-            </Avatar>
-          </span>
-        </div>
-      </TooltipTrigger>
-      <TooltipContent>
-        <p>
-          {listening
-            ? 'Disable speech recognition'
-            : 'Activate speech recognition'}
-        </p>
-      </TooltipContent>
-    </Tooltip>
-  );
-};
 
 export default function UserLayout({ mutate, user, content }) {
   const router = useRouter();
@@ -248,18 +188,7 @@ export default function UserLayout({ mutate, user, content }) {
               </nav>
             </SheetContent>
           </Sheet>
-          <div className="w-full flex-1">
-            {/* <form>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="search"
-                  placeholder="Search products..."
-                  className="w-full appearance-none bg-background pl-8 shadow-none md:w-2/3 lg:w-1/3"
-                />
-              </div>
-            </form> */}
-          </div>
+
           <SpeechListener />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -268,7 +197,7 @@ export default function UserLayout({ mutate, user, content }) {
                   {user.role !== userRole.admin && (
                     <>
                       <Avatar>
-                        <AvatarImage src="https://github.com/shadcn.png" />
+                        <AvatarImage src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRDwmG52pVI5JZfn04j9gdtsd8pAGbqjjLswg&s" />
                         <AvatarFallback>{`${user.firstName} ${user.lastName}`}</AvatarFallback>
                       </Avatar>
                       <div className="flex flex-col gap-1 items-start justify-center">

@@ -3,7 +3,7 @@ import { dbProjectionUsers } from '.';
 
 export async function findAttendance(db, userId, before) {
   return db
-    .collection('attendances')
+    .collection('attendance')
     .aggregate([
       {
         $match: {

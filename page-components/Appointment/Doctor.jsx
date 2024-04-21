@@ -367,7 +367,7 @@ const Doctor = () => {
 
       setBookedAppointments(
         bookedAppointmentsResult.map((bookedAppointment) => ({
-          id: 1,
+          id: bookedAppointment._id,
           title: `${capitalizeFirstLetter(bookedAppointment.patientName)} (${
             bookedAppointment.time
           })`,
