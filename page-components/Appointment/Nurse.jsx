@@ -110,6 +110,7 @@ const Nurse = () => {
                 },
               };
             }}
+            onSelectEvent={(ev) => console.log('event', ev)}
             localizer={localizer}
             events={bookedAppointments}
             startAccessor="start"
@@ -279,7 +280,11 @@ const CreateAppointment = ({ onCancel }) => {
             startAccessor="start"
             endAccessor="end"
             selectable
-            onSelectSlot={handleSelectDate}
+            onSelectSlot={({ start }) => {
+              if (moment(start).isAfter()) {
+                setSelectedDate(start);
+              }
+            }}
             views={{
               month: true,
             }}
