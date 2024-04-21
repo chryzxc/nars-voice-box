@@ -5,20 +5,23 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import Head from 'next/head';
 import { Input } from '@/components/ui/input';
 import { fetcher } from '@/lib/fetch';
 import toast from 'react-hot-toast';
+import { useCurrentUser } from '@/lib/user';
 import { useRouter } from 'next/router';
 
 const AccountSetup = () => {
   const router = useRouter();
   const newPasswordRef = useRef();
   const confirmPasswordRef = useRef();
-
+  const {
+    data: { user },
+  } = useCurrentUser();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -44,13 +47,21 @@ const AccountSetup = () => {
       console.log('response', response);
 
       toast.success('Account has been successfully setup');
-      router.push('/dashboard');
+      router.reload();
+      router.replace('/dashboard');
     } catch (e) {
       toast.error(e.message);
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (user.temporaryPasswordChanged) {
+      router.replace('/dashboard');
+      return;
+    }
+  }, [user, router]);
 
   return (
     <>
