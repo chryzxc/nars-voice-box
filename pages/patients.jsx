@@ -5,8 +5,10 @@ import {
 } from '@/lib/utils';
 import { useEffect, useState } from 'react';
 
+import { Badge } from '@/components/ui/badge';
 import CustomDataTable from '@/components/CustomDataTable';
 import Head from 'next/head';
+import { appointmentStatuses } from '@/lib/constants';
 import { fetcher } from '@/lib/fetch';
 import moment from 'moment';
 
@@ -15,7 +17,11 @@ export const getPatients = async () => {
     method: 'GET',
     headers: { 'Content-Type': 'application/json' },
   });
-  return results.filter((result) => moment(result.date).isBefore());
+  return results.filter(
+    (result) =>
+      moment(result.date).isBefore() &&
+      result.status !== appointmentStatuses.pending
+  );
 };
 
 const Patients = ({ speechRecognitionKeyword, asComponent }) => {
@@ -36,6 +42,21 @@ const Patients = ({ speechRecognitionKeyword, asComponent }) => {
     {
       name: 'Address',
       selector: (row) => row.patientAddress,
+      sortable: true,
+    },
+    {
+      name: 'Status',
+      selector: (row) => (
+        <Badge
+          className={`capitalize ${
+            row.status === appointmentStatuses.cancelled
+              ? 'bg-red-600'
+              : 'bg-green-600'
+          }`}
+        >
+          {row.status}
+        </Badge>
+      ),
       sortable: true,
     },
   ];
@@ -83,10 +104,7 @@ const Patients = ({ speechRecognitionKeyword, asComponent }) => {
         if (speechRecognitionKeyword) {
           console.log('keyword', speechRecognitionKeyword);
           console.log('result', result);
-          console.log(
-            'filtered',
-            speechRecognitionFilter(speechRecognitionKeyword, result)
-          );
+
           setPatients(
             speechRecognitionFilter(speechRecognitionKeyword, result)
           );

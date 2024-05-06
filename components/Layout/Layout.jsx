@@ -122,7 +122,11 @@ const Layout = ({ children }) => {
 
   useEffect(() => {
     const page = links.find((link) => link.href === router.asPath);
-    if (user && (!page || !page.roles.includes(user.role))) {
+    if (
+      user &&
+      user.temporaryPasswordChanged &&
+      (!page || !page.roles.includes(user.role))
+    ) {
       router.replace('/dashboard');
       return;
     }

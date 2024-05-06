@@ -16,7 +16,15 @@ const DialogLabelValue = ({ label, value }) => (
   </div>
 );
 
-const AppointmentModal = ({ open, onOpenChange, onEdit, onComplete, data }) => {
+const AppointmentModal = ({
+  open,
+  onOpenChange,
+  onEdit,
+  onComplete,
+  data,
+  onCancel,
+  viewOnly,
+}) => {
   if (!data) return null;
   return (
     <Dialog {...{ open, onOpenChange }}>
@@ -41,7 +49,7 @@ const AppointmentModal = ({ open, onOpenChange, onEdit, onComplete, data }) => {
           })}
         />
         <DialogLabelValue
-          label="Schedule date"
+          label="Scheduled date"
           value={`${moment(data?.date).format('MMMM DD, YYYY')} (${
             data?.time
           })`}
@@ -59,16 +67,21 @@ const AppointmentModal = ({ open, onOpenChange, onEdit, onComplete, data }) => {
           label="Created"
           value={moment(data?.createdAt).format('MMMM DD,YYYY hh:mm a')}
         />
-        <div className="flex flex-col gap-2">
-          <Button onClick={onEdit} className="bg-primary">
-            Edit
-          </Button>
-          {eventHasPassed(data?.date) && (
-            <Button onClick={onComplete} className="bg-secondary">
-              Mark as done
+        {!viewOnly && (
+          <div className="flex flex-col gap-2">
+            <Button onClick={onEdit} className="bg-primary">
+              Edit
             </Button>
-          )}
-        </div>
+            <Button onClick={onCancel} className="bg-red-700">
+              Cancel Appointment
+            </Button>
+            {eventHasPassed(data?.date) && (
+              <Button onClick={onComplete} className="bg-secondary">
+                Mark as done
+              </Button>
+            )}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

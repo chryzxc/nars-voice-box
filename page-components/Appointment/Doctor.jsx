@@ -1,3 +1,9 @@
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import {
   Card,
@@ -7,20 +13,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Fragment, useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   capitalizeFirstLetter,
   formatHourInDate,
+  sortByDateTime,
   speechRecognitionFilter,
 } from '@/lib/utils';
 
+import AppointmentModal from './AppointmentModal';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import CustomDataTable from '@/components/CustomDataTable';
@@ -335,10 +336,14 @@ const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
   const [openDefaultTimeSlot, setOpenDefaultTimeSlot] = useState(true);
   const [hasDefaultTimeSlots, setHasDefaultTimeSlots] = useState(false);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
-
   const [bookedAppointments, setBookedAppointments] = useState([]);
   const [calendarEvents, setCalendarEvents] = useState([]);
-  const [selectedAppointment, setSelectedApppointment] = useState(null);
+  const [selectedAppointmentId, setSelectedApppointmentId] = useState(null);
+
+  const selectedAppointmentData = useMemo(
+    () => bookedAppointments.find(({ _id }) => selectedAppointmentId === _id),
+    [selectedAppointmentId, bookedAppointments]
+  );
 
   const selectTimeSlot = (timeSlot) => {
     if (selectedTimeSlots.includes(timeSlot)) {
@@ -358,6 +363,7 @@ const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ timeSlots: selectedTimeSlots }),
       });
+      toast.success('Time slots has been set');
     } catch (e) {
       // do nothing
     } finally {
@@ -443,21 +449,23 @@ const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
             sortable: true,
           },
         ]}
-        data={bookedAppointments}
+        data={sortByDateTime(bookedAppointments)}
       />
     );
 
   return (
     <Fragment>
-      <Dialog
+      <AlertDialog
         open={!hasDefaultTimeSlots ?? openDefaultTimeSlot}
         onOpenChange={setOpenDefaultTimeSlot}
       >
-        <DialogContent>
+        <AlertDialogContent>
           <form onSubmit={handleSetDefaultTimeSlots}>
-            <DialogHeader>
-              <DialogTitle>Set your default working time slots</DialogTitle>
-            </DialogHeader>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                Set your default working time slots
+              </AlertDialogTitle>
+            </AlertDialogHeader>
             <div className="flex flex-col gap-2">
               <p className="text-primary font-medium">Morning</p>
               <div className="flex flex-row gap-2">
@@ -515,8 +523,8 @@ const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
               </Button>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
+        </AlertDialogContent>
+      </AlertDialog>
       {isSettingSchedule ? (
         <SetSchedule
           onClose={() => setIsSettingSchedule(false)}
@@ -524,6 +532,12 @@ const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
         />
       ) : (
         <Fragment>
+          <AppointmentModal
+            open={selectedAppointmentId && selectedAppointmentData}
+            onOpenChange={() => setSelectedApppointmentId(null)}
+            data={selectedAppointmentData}
+            viewOnly={true}
+          />
           <div>
             <Button
               className="bg-secondary"
@@ -540,6 +554,7 @@ const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
                 },
               };
             }}
+            onSelectEvent={({ id }) => setSelectedApppointmentId(id)}
             localizer={localizer}
             events={calendarEvents}
             startAccessor="start"

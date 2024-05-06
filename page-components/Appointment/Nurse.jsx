@@ -31,6 +31,7 @@ import {
   formatHourInDate,
   formatString,
   isDoctor,
+  sortByDateTime,
   speechRecognitionFilter,
 } from '@/lib/utils';
 
@@ -85,6 +86,22 @@ const Nurse = ({ speechRecognitionKeyword, asComponent }) => {
         }),
       });
       toast.success(`Appointment has been updated`);
+      getBookedAppointments();
+    } catch (e) {
+      toast.error(`Failed to update: ${e}`);
+    }
+  };
+
+  const cancelAppointment = async () => {
+    try {
+      await fetcher(`/api/appointment?id=${selectedAppointmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: appointmentStatuses.cancelled,
+        }),
+      });
+      toast.success(`Appointment has been cancelled`);
       getBookedAppointments();
     } catch (e) {
       toast.error(`Failed to update: ${e}`);
@@ -151,7 +168,7 @@ const Nurse = ({ speechRecognitionKeyword, asComponent }) => {
             sortable: true,
           },
         ]}
-        data={bookedAppointments}
+        data={sortByDateTime(bookedAppointments)}
       />
     );
 
@@ -175,6 +192,7 @@ const Nurse = ({ speechRecognitionKeyword, asComponent }) => {
             onEdit={() => setIsCreatingAppointment(true)}
             data={selectedAppointmentData}
             onComplete={markAsDone}
+            onCancel={cancelAppointment}
           />
           <div>
             <Button
