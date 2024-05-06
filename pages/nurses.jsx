@@ -23,6 +23,7 @@ import CustomDataTable from '@/components/CustomDataTable';
 import Head from 'next/head';
 import { Input } from '@/components/ui/input';
 import { fetcher } from '@/lib/fetch';
+import { speechRecognitionFilter } from '@/lib/utils';
 import toast from 'react-hot-toast';
 
 const columns = [
@@ -47,6 +48,14 @@ const columns = [
     sortable: true,
   },
 ];
+
+export const getNurse = async () => {
+  const result = await fetcher('/api/users', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return result.users.filter((user) => user.role === userRole.nurse).reverse();
+};
 
 const AddNurseButton = ({ onUpdate }) => {
   const firstNameRef = useRef();
@@ -134,27 +143,26 @@ const AddNurseButton = ({ onUpdate }) => {
   );
 };
 
-const Nurses = () => {
+const Nurses = ({ speechRecognitionKeyword, asComponent }) => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const getData = useCallback(async () => {
     setLoading(true);
     try {
-      const result = await fetcher('/api/users', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const nurses = await getNurse();
+      if (speechRecognitionKeyword) {
+        setUsers(speechRecognitionFilter(speechRecognitionKeyword, nurses));
+        return;
+      }
 
-      setUsers(
-        result.users.filter((user) => user.role === userRole.nurse).reverse()
-      );
+      setUsers(nurses);
     } catch (e) {
       // do nothing
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [speechRecognitionKeyword]);
 
   useEffect(() => {
     getData();
@@ -169,12 +177,17 @@ const Nurses = () => {
       <div>
         <CustomDataTable
           loading={loading}
-          title="Nurse list"
+          title={
+            speechRecognitionKeyword || asComponent ? undefined : 'Nurse list'
+          }
           columns={columns}
-          data={users}
-          showPagination
-          searchable
-          additionalHeader={<AddNurseButton onUpdate={getData} />}
+          data={asComponent ? users.slice(0, 5) : users}
+          showPagination={!asComponent && !speechRecognitionKeyword}
+          additionalHeader={
+            speechRecognitionKeyword || asComponent ? null : (
+              <AddNurseButton onUpdate={getData} />
+            )
+          }
         />
       </div>
     </>

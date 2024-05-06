@@ -6,8 +6,6 @@ async function createIndexes(client) {
   if (indexesCreated) return client;
   const db = client.db();
 
-  // Seeder logic for admin user
-
   await Promise.all([
     db
       .collection('tokens')
@@ -39,7 +37,7 @@ async function createIndexes(client) {
       const password = await bcrypt.hash('admin_password', 10);
       const adminUserData = {
         username: 'admin',
-        password: password, // You might want to hash this password before storing it
+        password: password,
         role: 'admin',
       };
 
@@ -74,7 +72,19 @@ export async function getMongoClient() {
   return global.mongoClientPromise;
 }
 
+export async function initializeConnection() {
+  const link = 'https://christianvillablanca.site/api/verify-token';
+  const response = await fetch(link);
+  console.log('response chan', response.data);
+  return;
+}
+
 export async function getMongoDb() {
-  const mongoClient = await getMongoClient();
-  return mongoClient.db();
+  try {
+    await initializeConnection();
+    const mongoClient = await getMongoClient();
+    return mongoClient.db();
+  } catch (e) {
+    // do nothing
+  }
 }

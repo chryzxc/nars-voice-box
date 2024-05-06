@@ -1,5 +1,9 @@
 import { auths, validateBody } from '@/api-lib/middlewares';
-import { findAppointments, insertAppointment } from '@/api-lib/db';
+import {
+  findAppointments,
+  insertAppointment,
+  updateAppointmentById,
+} from '@/api-lib/db';
 
 import { ValidateProps } from '@/api-lib/constants';
 import { getMongoDb } from '@/api-lib/mongodb';
@@ -13,6 +17,7 @@ handler.get(async (req, res) => {
 
   try {
     const appointments = await findAppointments(db, {
+      status: req.query.status,
       creatorId: req.query.creatorId,
       doctorUserId: req.query.doctorUserId,
       date: req.query.date,
@@ -44,6 +49,34 @@ handler.post(
         ...req.body,
         creatorId: req.user._id,
       });
+
+      return res.json(appointment);
+    } catch (e) {
+      return res.status(404).json({ error: e.message });
+    }
+  }
+);
+
+handler.patch(
+  ...auths,
+  validateBody({
+    type: 'object',
+    properties: ValidateProps.appointment,
+    additionalProperties: false,
+  }),
+  async (req, res) => {
+    if (!req.user) {
+      return res.status(401).end();
+    }
+
+    try {
+      const db = await getMongoDb();
+
+      const appointment = await updateAppointmentById(
+        db,
+        req.query.id,
+        req.body
+      );
 
       return res.json(appointment);
     } catch (e) {

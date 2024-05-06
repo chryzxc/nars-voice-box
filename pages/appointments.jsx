@@ -4,7 +4,7 @@ import Nurse from '@/page-components/Appointment/Nurse';
 import { useCurrentUser } from '@/lib/user';
 import { userRole } from '@/lib/constants';
 
-const Appointments = () => {
+const Appointments = ({ speechRecognitionKeyword }) => {
   const {
     data: { user },
   } = useCurrentUser();
@@ -15,7 +15,11 @@ const Appointments = () => {
         <title>Appointments</title>
       </Head>
 
-      {user.role === userRole.nurse ? <Nurse /> : <Doctor />}
+      {user.role === userRole.nurse ? (
+        <Nurse speechRecognitionKeyword={speechRecognitionKeyword} />
+      ) : (
+        <Doctor speechRecognitionKeyword={speechRecognitionKeyword} />
+      )}
     </>
   );
 };

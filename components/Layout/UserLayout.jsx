@@ -15,20 +15,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Menu, Mic } from 'lucide-react';
+import { Menu, SettingsIcon } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { capitalizeFirstLetter, formatString } from '@/lib/utils';
+import { useCallback, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import Logo from '../Logo';
 import SpeechListener from '../SpeechListener';
 import { fetcher } from '@/lib/fetch';
 import toast from 'react-hot-toast';
-import { useCallback } from 'react';
 import { useRouter } from 'next/router';
 import { userRole } from '@/lib/constants';
 
-const links = [
+export const doctorRoles = [
+  userRole.internal_family_doctor,
+  userRole.neurologist,
+  userRole.pediatric,
+  userRole.surgeon,
+];
+
+export const links = [
   {
     label: 'Dashboard',
     icon: Squares2X2Icon,
@@ -42,12 +50,7 @@ const links = [
     href: '/nurses',
     // notificationCount: 3,
     isActive: false,
-    roles: [
-      userRole.internal_family_doctor,
-      userRole.neurologist,
-      userRole.pediatric,
-      userRole.surgeon,
-    ],
+    roles: doctorRoles,
   },
   {
     label: 'Patients',
@@ -55,39 +58,21 @@ const links = [
     href: '/patients',
     // notificationCount: 4,
     isActive: false,
-    roles: [
-      userRole.internal_family_doctor,
-      userRole.neurologist,
-      userRole.pediatric,
-      userRole.surgeon,
-      userRole.nurse,
-    ],
+    roles: [...doctorRoles, userRole.nurse],
   },
   {
     label: 'Attendance',
     icon: DocumentIcon,
     href: '/attendance',
     isActive: false,
-    roles: [
-      userRole.internal_family_doctor,
-      userRole.neurologist,
-      userRole.pediatric,
-      userRole.surgeon,
-      userRole.nurse,
-    ],
+    roles: [...doctorRoles, userRole.nurse],
   },
   {
     label: 'Appointments',
     icon: CalendarDaysIcon,
     href: '/appointments',
     isActive: false,
-    roles: [
-      userRole.nurse,
-      userRole.internal_family_doctor,
-      userRole.neurologist,
-      userRole.pediatric,
-      userRole.surgeon,
-    ],
+    roles: [userRole.nurse, ...doctorRoles],
   },
   {
     label: 'Users',
@@ -96,11 +81,18 @@ const links = [
     isActive: false,
     roles: [userRole.admin],
   },
+  {
+    label: 'Settings',
+    icon: SettingsIcon,
+    href: '/settings',
+    isActive: false,
+    roles: [userRole.admin],
+  },
 ];
 
 export default function UserLayout({ mutate, user, content }) {
   const router = useRouter();
-
+  const [openSideNav, setOpenSideNav] = useState(false);
   const isPageActive = (link) => router.asPath === link;
 
   const handleLogout = useCallback(async () => {
@@ -122,12 +114,7 @@ export default function UserLayout({ mutate, user, content }) {
         <div className="flex h-full max-h-screen flex-col gap-2">
           <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
             <Link href="/">
-              <div className="flex items-center gap-2 font-semibold">
-                <Mic className="h-6 w-6 text-secondary" />
-                <span className="text-primary font-bold text-xl tracking-tighter">
-                  NarsVoiceBox
-                </span>
-              </div>
+              <Logo />
             </Link>
           </div>
           <div className="flex-1">
@@ -156,7 +143,7 @@ export default function UserLayout({ mutate, user, content }) {
       </div>
       <div className="flex flex-col">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          <Sheet>
+          <Sheet onOpenChange={setOpenSideNav} open={openSideNav}>
             <SheetTrigger asChild>
               <Button
                 variant="outline"
@@ -170,19 +157,22 @@ export default function UserLayout({ mutate, user, content }) {
             <SheetContent side="left" className="flex flex-col">
               <nav className="grid gap-2 text-lg font-medium">
                 <Link href="#">
-                  <div className="flex items-center gap-2 text-lg font-semibold">
-                    <Mic className="h-6 w-6 text-secondary" />
-                    <span className="text-primary font-bold text-xl tracking-tighter">
-                      NarsVoiceBox
-                    </span>
-                  </div>
+                  <Logo />
                 </Link>
                 {links
                   .filter((link) => link.roles.includes(user.role))
                   .map((link, idx) => {
                     return (
                       <Link href={link.href} key={idx}>
-                        <div className="cursor-pointer mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground">
+                        <div
+                          onClick={() => setOpenSideNav(false)}
+                          className={`${
+                            isPageActive(link.href)
+                              ? 'bg-primary text-white transition-all '
+                              : 'text-muted-foreground transition-all hover:text-primary '
+                          }flex items-center gap-3 rounded-lg cursor-pointer px-3 py-2`}
+                          // className="cursor-pointer mx-[-0.65rem] flex items-center gap-4 rounded-xl px-3 py-2 text-muted-foreground hover:text-foreground"
+                        >
                           <link.icon className="h-5 w-5" />
                           {link.label}
                         </div>
@@ -234,7 +224,7 @@ export default function UserLayout({ mutate, user, content }) {
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6">
+        <main className="flex flex-1 flex-col gap-4 p-4 lg:gap-6 lg:p-6 ">
           {content}
         </main>
       </div>

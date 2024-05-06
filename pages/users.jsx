@@ -113,7 +113,7 @@ const AddUserButton = ({ onUpdate }) => {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             firstName: firstNameRef.current.value,
-            middleName: middleNameRef.current.value,
+            middleName: middleNameRef.current.value || '',
             lastName: lastNameRef.current.value,
             role: role,
           }),

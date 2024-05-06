@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb';
+import { appointmentStatuses } from '@/lib/constants';
 import { dbProjectionUsers } from './user';
 import { getStartAndEndDate } from '@/lib/utils';
 
@@ -26,7 +27,7 @@ export async function findAppointmentById(db, id) {
 
 export async function findAppointments(
   db,
-  { date, time, creatorId, doctorUserId }
+  { date, time, creatorId, doctorUserId, status }
 ) {
   const { startDate, endDate } = getStartAndEndDate(date);
   console.log({ startDate, endDate });
@@ -35,6 +36,7 @@ export async function findAppointments(
     .aggregate([
       {
         $match: {
+          ...(status && { status }),
           ...(doctorUserId && { doctorUserId: new ObjectId(doctorUserId) }),
           ...(creatorId && { creatorId: new ObjectId(creatorId) }),
           ...(date && {
@@ -86,6 +88,28 @@ export async function findExistingAppointmentsByTimeAndDate(
   return existingAppointment;
 }
 
+export async function updateAppointmentById(db, id, data) {
+  return db
+    .collection('appointments')
+    .findOneAndUpdate(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          ...data,
+          ...(data.date && {
+            date: new Date(data.date),
+            status: appointmentStatuses.pending,
+          }),
+          ...(data.doctorUserId && {
+            doctorUserId: new ObjectId(data.doctorUserId),
+          }),
+        },
+      },
+      { returnDocument: 'after' }
+    )
+    .then(({ value }) => value);
+}
+
 export async function insertAppointment(
   db,
   {
@@ -120,6 +144,7 @@ export async function insertAppointment(
     notes,
     creatorId,
     createdAt: new Date(),
+    status: appointmentStatuses.pending,
   };
 
   const { insertedId } = await db

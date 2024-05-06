@@ -8,6 +8,7 @@ import { Toaster } from 'react-hot-toast';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
 export default function MyApp({ Component, pageProps }) {
+  console.log('Hello fellow devs! https://github.com/chryzxc');
   return (
     <ThemeProvider>
       <TooltipProvider>

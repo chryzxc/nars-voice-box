@@ -15,10 +15,16 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Fragment, useCallback, useEffect, useState } from 'react';
-import { capitalizeFirstLetter, formatHourInDate } from '@/lib/utils';
+import {
+  capitalizeFirstLetter,
+  formatHourInDate,
+  speechRecognitionFilter,
+} from '@/lib/utils';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import CustomDataTable from '@/components/CustomDataTable';
+import Spinner from '@/components/Spinner';
 import dayjs from 'dayjs';
 import { fetcher } from '@/lib/fetch';
 import moment from 'moment';
@@ -116,6 +122,15 @@ const timeSlotsArr = [
   },
 ];
 
+export const getDoctorAppointments = async (userId) => {
+  const results = await fetcher(`/api/appointment?doctorUserId=${userId}`, {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
+  return results;
+  return results.filter((result) => moment(result.date).isAfter(moment()));
+};
+
 const SetSchedule = ({ onClose, defaultTimeSlots }) => {
   const [loading, setLoading] = useState(true);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState(defaultTimeSlots);
@@ -147,7 +162,7 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
       });
       toast.success('Time slots has been successfully updated');
     } catch (e) {
-      toast.error(`Failed: ${e}`);
+      // toast.error(`Failed: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -174,7 +189,7 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
       }
     } catch (e) {
       setSelectedTimeSlots(defaultTimeSlots);
-      toast.error(`Failed: ${e}`);
+      // toast.error(`Failed: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -312,7 +327,7 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
   );
 };
 
-const Doctor = () => {
+const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
   const { data: { user } = {} } = useCurrentUser();
 
   const [loading, setLoading] = useState(true);
@@ -322,6 +337,7 @@ const Doctor = () => {
   const [selectedTimeSlots, setSelectedTimeSlots] = useState([]);
 
   const [bookedAppointments, setBookedAppointments] = useState([]);
+  const [calendarEvents, setCalendarEvents] = useState([]);
   const [selectedAppointment, setSelectedApppointment] = useState(null);
 
   const selectTimeSlot = (timeSlot) => {
@@ -357,30 +373,27 @@ const Doctor = () => {
         headers: { 'Content-Type': 'application/json' },
       });
 
-      const bookedAppointmentsResult = await fetcher(
-        `/api/appointment?doctorUserId=${user._id}`,
-        {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      const appointments = await getDoctorAppointments(user._id);
 
-      setBookedAppointments(
-        bookedAppointmentsResult.map((bookedAppointment) => ({
-          id: bookedAppointment._id,
-          title: `${capitalizeFirstLetter(bookedAppointment.patientName)} (${
-            bookedAppointment.time
+      if (speechRecognitionKeyword) {
+        setBookedAppointments(
+          speechRecognitionFilter(speechRecognitionKeyword, appointments)
+        );
+        return;
+      }
+
+      setBookedAppointments(appointments);
+      setCalendarEvents(
+        appointments.map((appointment) => ({
+          id: appointment._id,
+          title: `${capitalizeFirstLetter(appointment.patientName)} (${
+            appointment.time
           })`,
-          start: new Date(
-            formatHourInDate(bookedAppointment.date, bookedAppointment.time)
-          ),
+          start: new Date(formatHourInDate(appointment.date, appointment.time)),
           end: new Date(
-            formatHourInDate(
-              bookedAppointment.date,
-              bookedAppointment.time,
-              true
-            )
+            formatHourInDate(appointment.date, appointment.time, true)
           ),
+          data: appointment,
         })) || []
       );
 
@@ -395,7 +408,7 @@ const Doctor = () => {
         setHasDefaultTimeSlots(true);
       }
     } catch (e) {
-      toast.error(`Failed: ${e}`);
+      // toast.error(`Failed: ${e}`);
     } finally {
       setLoading(false);
     }
@@ -405,9 +418,35 @@ const Doctor = () => {
     getData();
   }, [getData]);
 
-  if (loading) return <div>Loading</div>;
+  if (loading) return <Spinner />;
 
-  console.log('selectedTimeSlots', { selectedTimeSlots, hasDefaultTimeSlots });
+  console.log('data', bookedAppointments);
+
+  if (speechRecognitionKeyword || asComponent)
+    return (
+      <CustomDataTable
+        loading={loading}
+        columns={[
+          {
+            name: 'Patient Name',
+            selector: (row) => row.patientName,
+            sortable: true,
+          },
+          {
+            name: 'Date',
+            selector: (row) => moment(row.date).format('MMMM DD, YYYY '),
+            sortable: true,
+          },
+          {
+            name: 'Time',
+            selector: (row) => row.time,
+            sortable: true,
+          },
+        ]}
+        data={bookedAppointments}
+      />
+    );
+
   return (
     <Fragment>
       <Dialog
@@ -502,7 +541,7 @@ const Doctor = () => {
               };
             }}
             localizer={localizer}
-            events={bookedAppointments}
+            events={calendarEvents}
             startAccessor="start"
             endAccessor="end"
             style={{ height: 500 }}

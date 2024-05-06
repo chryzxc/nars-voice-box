@@ -15,7 +15,7 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -23,15 +23,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { appointmentStatuses, userRole } from '@/lib/constants';
 import {
   buildFullName,
   capitalizeFirstLetter,
-  filterDoctor,
+  eventHasPassed,
   formatHourInDate,
   formatString,
+  isDoctor,
+  speechRecognitionFilter,
 } from '@/lib/utils';
 
+import AppointmentModal from './AppointmentModal';
 import { Button } from '@/components/ui/button';
+import CustomDataTable from '@/components/CustomDataTable';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import dayjs from 'dayjs';
@@ -41,59 +46,136 @@ import theme from '@/styles/theme';
 import toast from 'react-hot-toast';
 import { useCurrentUser } from '@/lib/user';
 import { useForm } from 'react-hook-form';
-import { userRole } from '@/lib/constants';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
 const localizer = momentLocalizer(moment);
 
-const Nurse = () => {
+export const getNurseAppointments = async (userId) => {
+  const results = await fetcher(
+    `/api/appointment?creatorId=${userId}&status=${appointmentStatuses.pending}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
+  return results;
+  return results.filter((result) => moment(result.date).isAfter(moment()));
+};
+
+const Nurse = ({ speechRecognitionKeyword, asComponent }) => {
   const { data: { user } = {} } = useCurrentUser();
   const [isCreatingAppointment, setIsCreatingAppointment] = useState(false);
   const [bookedAppointments, setBookedAppointments] = useState([]);
-  const [selectedAppointment, setSelectedApppointment] = useState(null);
+  const [calendarEvents, setCalendarEvents] = useState([]);
+  const [selectedAppointmentId, setSelectedApppointmentId] = useState(null);
+
+  const selectedAppointmentData = useMemo(
+    () => bookedAppointments.find(({ _id }) => selectedAppointmentId === _id),
+    [selectedAppointmentId, bookedAppointments]
+  );
+
+  const markAsDone = async () => {
+    try {
+      await fetcher(`/api/appointment?id=${selectedAppointmentId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: appointmentStatuses.done,
+        }),
+      });
+      toast.success(`Appointment has been updated`);
+      getBookedAppointments();
+    } catch (e) {
+      toast.error(`Failed to update: ${e}`);
+    }
+  };
+
+  const getBookedAppointments = useCallback(async () => {
+    try {
+      const results = await getNurseAppointments(user._id);
+
+      if (speechRecognitionKeyword) {
+        setBookedAppointments(
+          speechRecognitionFilter(speechRecognitionKeyword, results)
+        );
+        return;
+      }
+
+      setBookedAppointments(results);
+      setCalendarEvents(
+        results.map((bookedAppointment) => ({
+          id: bookedAppointment._id,
+          title: `${capitalizeFirstLetter(bookedAppointment.patientName)} (${
+            bookedAppointment.doctor.firstName
+          } ${bookedAppointment.time})`,
+          start: new Date(
+            formatHourInDate(bookedAppointment.date, bookedAppointment.time)
+          ),
+          end: new Date(
+            formatHourInDate(
+              bookedAppointment.date,
+              bookedAppointment.time,
+              true
+            )
+          ),
+          data: bookedAppointment,
+        })) || []
+      );
+    } catch (e) {
+      toast.error(`Failed to get appointments: ${e}`);
+    }
+  }, [speechRecognitionKeyword, user._id]);
 
   useEffect(() => {
-    const getBookedAppointments = async () => {
-      try {
-        const bookedAppointmentsResult = await fetcher(
-          `/api/appointment?creatorId=${user._id}`,
-          {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-          }
-        );
-        setBookedAppointments(
-          bookedAppointmentsResult.map((bookedAppointment) => ({
-            id: 1,
-            title: `${capitalizeFirstLetter(bookedAppointment.patientName)} (${
-              bookedAppointment.doctor.firstName
-            } ${bookedAppointment.time})`,
-            start: new Date(
-              formatHourInDate(bookedAppointment.date, bookedAppointment.time)
-            ),
-            end: new Date(
-              formatHourInDate(
-                bookedAppointment.date,
-                bookedAppointment.time,
-                true
-              )
-            ),
-          })) || []
-        );
-      } catch (e) {
-        toast.error(`Failed to get appointments: ${e}`);
-      }
-    };
     getBookedAppointments();
-  }, []);
+  }, [getBookedAppointments]);
+
+  if (speechRecognitionKeyword || asComponent)
+    return (
+      <CustomDataTable
+        columns={[
+          {
+            name: 'Patient Name',
+            selector: (row) => row.patientName,
+            sortable: true,
+          },
+          {
+            name: 'Date',
+            selector: (row) => moment(row.date).format('MMMM DD, YYYY '),
+            sortable: true,
+          },
+          {
+            name: 'Time',
+            selector: (row) => row.time,
+            sortable: true,
+          },
+        ]}
+        data={bookedAppointments}
+      />
+    );
 
   return (
     <Fragment>
       {isCreatingAppointment ? (
-        <CreateAppointment onCancel={() => setIsCreatingAppointment(false)} />
+        <CreateAppointment
+          onCancel={() => {
+            getBookedAppointments();
+            setIsCreatingAppointment(false);
+          }}
+          appointmentData={
+            selectedAppointmentId ? selectedAppointmentData : null
+          }
+        />
       ) : (
         <Fragment>
+          <AppointmentModal
+            open={selectedAppointmentId && selectedAppointmentData}
+            onOpenChange={() => setSelectedApppointmentId(null)}
+            onEdit={() => setIsCreatingAppointment(true)}
+            data={selectedAppointmentData}
+            onComplete={markAsDone}
+          />
           <div>
             <Button
               className="bg-secondary"
@@ -103,16 +185,24 @@ const Nurse = () => {
             </Button>
           </div>
           <Calendar
-            eventPropGetter={() => {
+            eventPropGetter={(event) => {
+              console.log({
+                test: eventHasPassed(event.data.date),
+                data: event.data,
+              });
               return {
                 style: {
-                  backgroundColor: theme.primary,
+                  backgroundColor: eventHasPassed(event.data.date)
+                    ? 'orange'
+                    : theme.primary,
+                  color: 'white',
+                  flexWrap: 'nowrap',
                 },
               };
             }}
-            onSelectEvent={(ev) => console.log('event', ev)}
+            onSelectEvent={({ id }) => setSelectedApppointmentId(id)}
             localizer={localizer}
-            events={bookedAppointments}
+            events={calendarEvents}
             startAccessor="start"
             endAccessor="end"
             style={{ height: 500 }}
@@ -123,7 +213,7 @@ const Nurse = () => {
   );
 };
 
-const CreateAppointment = ({ onCancel }) => {
+const CreateAppointment = ({ onCancel, appointmentData }) => {
   const [loading, setLoading] = useState(true);
   const [doctors, setDoctors] = useState([]);
   const [bookedAppointments, setBookedAppointments] = useState([]);
@@ -144,13 +234,14 @@ const CreateAppointment = ({ onCancel }) => {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      doctorType: '',
-      doctorUserId: '',
-      time: '',
-      patientName: '',
-      patientContactInformation: '',
-      patientAddress: '',
-      notes: '',
+      doctorType: appointmentData?.doctor.role || '',
+      doctorUserId: appointmentData?.doctor._id || '',
+      time: appointmentData?.time || '',
+      patientName: appointmentData?.patientName || '',
+      patientContactInformation:
+        appointmentData?.patientContactInformation || '',
+      patientAddress: appointmentData?.patientAddress || '',
+      notes: appointmentData?.notes || '',
     },
   });
 
@@ -167,16 +258,25 @@ const CreateAppointment = ({ onCancel }) => {
   async function onSubmit(values) {
     try {
       setLoading(true);
-      await fetcher('/api/appointment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...values,
-          date: selectedDate,
-        }),
-      });
+      await fetcher(
+        `/api/appointment${
+          appointmentData ? `?id=${appointmentData._id}` : ''
+        }`,
+        {
+          method: appointmentData ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...values,
+            date: selectedDate,
+          }),
+        }
+      );
 
-      toast.success('Appointment has been successfully created');
+      toast.success(
+        `Appointment has been successfully ${
+          appointmentData ? 'updated' : 'created'
+        }`
+      );
       onCancel();
     } catch (e) {
       toast.error(`Failed: ${e}`);
@@ -290,7 +390,9 @@ const CreateAppointment = ({ onCancel }) => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="col-span-2">
             <Card className="lg:max-h-[75vh] lg:overflow-hidden lg:overflow-y-scroll">
               <CardHeader>
-                <p className="text-gray-500 text-sm">Create appointment for:</p>
+                <p className="text-gray-500 text-sm">
+                  {appointmentData ? 'Update' : 'Create'} appointment for:
+                </p>
                 <CardTitle className="text-xl font-bold">
                   {dayjs(selectedDate).format('dddd')}
                 </CardTitle>
@@ -317,7 +419,7 @@ const CreateAppointment = ({ onCancel }) => {
                           </FormControl>
                           <SelectContent>
                             {Object.values(userRole)
-                              .filter(filterDoctor)
+                              .filter(isDoctor)
                               .map((role, idx) => (
                                 <SelectItem value={role} key={idx}>
                                   {capitalizeFirstLetter(formatString(role))}
@@ -461,21 +563,7 @@ const CreateAppointment = ({ onCancel }) => {
                       </FormItem>
                     )}
                   />
-                  {/* <Input
-                    placeholder="Patient name"
-                    ref={patientNameRef}
-                    required
-                  /> */}
-                  {/* <Input
-                    placeholder="Patient contact information"
-                    ref={patientContactInfoRef}
-                    required
-                  /> */}
-                  {/* <Input
-                    placeholder="Patient address"
-                    ref={patientAddressRef}
-                    required
-                  /> */}
+
                   <FormField
                     control={form.control}
                     name="notes"
@@ -498,7 +586,9 @@ const CreateAppointment = ({ onCancel }) => {
               </CardContent>
               <CardFooter>
                 <Button type="submit" className="mt-4 w-full" loading={loading}>
-                  Create appointment
+                  {appointmentData
+                    ? 'Update appointment'
+                    : 'Create appointment'}
                 </Button>
               </CardFooter>
             </Card>

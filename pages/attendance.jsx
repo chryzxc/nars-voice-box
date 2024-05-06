@@ -1,3 +1,9 @@
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { Button } from '@/components/ui/button';
@@ -5,8 +11,17 @@ import CustomDataTable from '@/components/CustomDataTable';
 import Head from 'next/head';
 import dayjs from 'dayjs';
 import { fetcher } from '@/lib/fetch';
+import moment from 'moment';
+import { speechRecognitionFilter } from '@/lib/utils';
+import toast from 'react-hot-toast';
 import { useCurrentUser } from '@/lib/user';
 import { userRole } from '@/lib/constants';
+
+export const getUserAttendance = async () =>
+  await fetcher('/api/user/attendance', {
+    method: 'GET',
+    headers: { 'Content-Type': 'application/json' },
+  });
 
 export const Attendance = ({ speechRecognitionKeyword }) => {
   const { data: { user } = {} } = useCurrentUser();
@@ -35,29 +50,29 @@ export const Attendance = ({ speechRecognitionKeyword }) => {
   const getData = useCallback(async () => {
     setLoading(true);
     try {
-      let result = [];
+      let results = [];
       if (isNurse) {
-        result = await fetcher('/api/user/attendance', {
-          method: 'GET',
-          headers: { 'Content-Type': 'application/json' },
-        });
+        results = await getUserAttendance();
       } else {
-        result = await fetcher('/api/attendance', {
+        results = await fetcher('/api/attendance', {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
       }
 
       if (speechRecognitionKeyword) {
+        const processedData = results.map((result) => {
+          delete result.user.role;
+          return result;
+        });
+
         setAttendanceRecords(
-          result.filter((data) =>
-            JSON.stringify(data).includes(speechRecognitionKeyword)
-          )
+          speechRecognitionFilter(speechRecognitionKeyword, processedData)
         );
         return;
       }
 
-      setAttendanceRecords(result);
+      setAttendanceRecords(results);
     } catch (e) {
       // do nothing
     } finally {
@@ -72,6 +87,7 @@ export const Attendance = ({ speechRecognitionKeyword }) => {
         headers: { 'Content-Type': 'application/json' },
       });
       getData();
+      toast.success(`Successfully clocked in`);
     } catch (e) {
       // do nothing
     } finally {
@@ -86,6 +102,7 @@ export const Attendance = ({ speechRecognitionKeyword }) => {
         headers: { 'Content-Type': 'application/json' },
       });
       getData();
+      toast.success(`Successfully timed out`);
     } catch (e) {
       // do nothing
     } finally {
@@ -141,9 +158,31 @@ export const Attendance = ({ speechRecognitionKeyword }) => {
           additionalHeader={
             isNurse && !speechRecognitionKeyword ? (
               <div className="flex flex-row gap-1">
-                <Button onClick={handleTimeIn} disabled={todaysTimeIn}>
-                  Time in
-                </Button>
+                <Dialog>
+                  <DialogTrigger disabled={todaysTimeIn}>
+                    <Button disabled={todaysTimeIn}>Time in</Button>
+                  </DialogTrigger>
+                  <DialogContent className="w-[400px]">
+                    <div className="flex flex-col justify-center items-center">
+                      <p className="text-xl font-medium">
+                        {moment().format('MMMM DD, YYYY')}
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {moment().format('dddd')}
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {moment().format('hh:mm a')}
+                      </p>
+                    </div>
+
+                    <DialogDescription>
+                      Hurry up! Time in now and be productive everyday
+                    </DialogDescription>
+
+                    <Button onClick={handleTimeIn}>Time in</Button>
+                  </DialogContent>
+                </Dialog>
+
                 <Button
                   onClick={handleTimeOut}
                   disabled={!todaysTimeIn || todaysTimeOut}

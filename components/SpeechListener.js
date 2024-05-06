@@ -9,22 +9,81 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from '@/components/ui/drawer';
-import { Fragment, useState } from 'react';
+import { Fragment, useMemo, useState } from 'react';
 import SpeechRecognition, {
   useSpeechRecognition,
 } from 'react-speech-recognition';
 import { Tooltip, TooltipContent, TooltipTrigger } from './ui/tooltip';
 
+import Appointments from 'pages/appointments';
 import Attendance from 'pages/attendance';
 import { Button } from '@/components/ui/button';
 import { MicrophoneIcon } from '@heroicons/react/24/outline';
+import Nurses from 'pages/nurses';
+import Patients from 'pages/patients';
+import { doctorRoles } from './Layout/UserLayout';
 import toast from 'react-hot-toast';
+import { useCurrentUser } from '@/lib/user';
+import { userRole } from '@/lib/constants';
 
 const SpeechListener = () => {
-  const commands = ['Search attendance'];
+  const {
+    data: { user },
+  } = useCurrentUser();
   const [openResults, setOpenResults] = useState(false);
-  const [keyword, setKeyword] = useState(null);
+  const [speechCommand, setSpeechCommand] = useState({
+    keyword: null,
+    command: null,
+  });
   const [message, setMessage] = useState('');
+
+  const commandsArr = useMemo(
+    () => ({
+      attendance: {
+        command: 'search attendance',
+        component: (
+          <Attendance speechRecognitionKeyword={speechCommand.keyword} />
+        ),
+        roles: doctorRoles,
+      },
+      patient: {
+        command: 'search patient',
+        component: (
+          <Patients speechRecognitionKeyword={speechCommand.keyword} />
+        ),
+        roles: [...doctorRoles, userRole.nurse],
+      },
+      appointment: {
+        command: 'search appointment',
+        component: (
+          <Appointments speechRecognitionKeyword={speechCommand.keyword} />
+        ),
+        roles: [...doctorRoles, userRole.nurse],
+      },
+      nurse: {
+        command: 'search nurse',
+        component: <Nurses speechRecognitionKeyword={speechCommand.keyword} />,
+        roles: doctorRoles,
+      },
+    }),
+    [speechCommand.keyword]
+  );
+
+  const commandsByRole = useMemo(
+    () =>
+      Object.values(commandsArr).filter(({ roles }) =>
+        roles.includes(user.role)
+      ),
+    [commandsArr, user.role]
+  );
+
+  const resultComponent = useMemo(
+    () =>
+      commandsByRole.find(({ command }) => {
+        return command.toLowerCase() === speechCommand.command?.toLowerCase();
+      })?.component,
+    [speechCommand.command, commandsByRole]
+  );
 
   const {
     transcript,
@@ -32,14 +91,16 @@ const SpeechListener = () => {
     resetTranscript,
     browserSupportsSpeechRecognition,
   } = useSpeechRecognition({
-    commands: commands.map((command) => ({
+    commands: commandsByRole.map(({ command }) => ({
       command: `${command} *`,
       callback: (keyword) => {
         setOpenResults(true);
         setMessage(
           `${command.replaceAll(`${command}`, 'Results for')}: ${keyword}`
         );
-        setKeyword(keyword.replaceAll('.', ''));
+        setSpeechCommand({ command, keyword: keyword.replaceAll('.', '') });
+
+        console.log({ resultComponent });
         SpeechRecognition.stopListening();
       },
     })),
@@ -73,9 +134,8 @@ const SpeechListener = () => {
 
   const handleClear = () => {
     SpeechRecognition.stopListening();
-    setKeyword(null);
+    setSpeechCommand({ command: null, keyword: null });
     setMessage('');
-
     resetTranscript();
   };
 
@@ -132,8 +192,11 @@ const SpeechListener = () => {
           <div className="mt-2">
             <p>Voice commands:</p>
             <ul className="list-decimal list-inside">
-              {commands.map((command, idx) => (
-                <li key={idx}>{`${command} [keyword]`}</li>
+              {commandsByRole.map(({ command }, idx) => (
+                <li
+                  key={idx}
+                  className="capitalize"
+                >{`${command} [keyword]`}</li>
               ))}
             </ul>
           </div>
@@ -143,14 +206,9 @@ const SpeechListener = () => {
       <Drawer open={openResults} onOpenChange={setOpenResults}>
         <DrawerContent>
           <DrawerHeader>
-            {/* {!!transcript && (
-              <div className="relative flex flex-row gap-2 items-center">
-                <p className="text-gray-500 text-sm"></p>
-              </div>
-            )} */}
             <DrawerTitle>{message}</DrawerTitle>
             <DrawerDescription></DrawerDescription>
-            <Attendance speechRecognitionKeyword={keyword} />
+            {resultComponent}
           </DrawerHeader>
           <DrawerFooter>
             <DrawerClose>

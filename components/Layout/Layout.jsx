@@ -1,4 +1,3 @@
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import {
   Dialog,
   DialogContent,
@@ -7,23 +6,27 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Disclosure, Menu, Transition } from '@headlessui/react';
-import { useCallback, useRef, useState } from 'react';
+import { appName, userRole } from '@/lib/constants';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { BellIcon } from '@heroicons/react/24/outline';
 import { Button } from '@/components/ui/button';
 import { Fragment } from 'react';
 import { Input } from '@/components/ui/input';
 import Loader from '../Loader';
+import Logo from '../Logo';
 import { UserLayout } from '.';
 import { fetcher } from '@/lib/fetch';
+import { links } from './UserLayout';
+import moment from 'moment';
 import toast from 'react-hot-toast';
 import { useCurrentUser } from '@/lib/user';
 import { useRouter } from 'next/router';
-import { userRole } from '@/lib/constants';
 
 const navigation = [
-  { name: 'Home', href: '#', current: true },
-  { name: 'About us', href: '#', current: false },
-  { name: 'Contact us', href: '#', current: false },
+  { name: 'Home', href: '#home', current: false },
+  { name: 'About us', href: '#about-us', current: false },
+  { name: 'Contact us', href: '#contact-us', current: false },
 ];
 
 const userNavigation = [
@@ -117,20 +120,24 @@ const Layout = ({ children }) => {
   const { data: { user } = {}, mutate, isLoading } = useCurrentUser();
   const router = useRouter();
 
+  useEffect(() => {
+    const page = links.find((link) => link.href === router.asPath);
+    if (user && (!page || !page.roles.includes(user.role))) {
+      router.replace('/dashboard');
+      return;
+    }
+  }, [user, router]);
+
   const home = (
     <div className="min-h-full">
       <Disclosure as="nav" className="bg-white">
-        {({ open }) => (
+        {() => (
           <>
             <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
               <div className="flex h-16 items-center justify-between">
                 <div className="flex items-center">
                   <div className="flex-shrink-0">
-                    <img
-                      className="h-8 w-8"
-                      src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                      alt="Your Company"
-                    />
+                    <Logo />
                   </div>
                   <div className="hidden md:block">
                     <div className="ml-10 flex items-baseline space-x-4">
@@ -198,18 +205,6 @@ const Layout = ({ children }) => {
                       </Transition>
                     </Menu>
                   </div>
-                </div>
-                <div className="-mr-2 flex md:hidden">
-                  {/* Mobile menu button */}
-                  <Disclosure.Button className="relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
-                    <span className="absolute -inset-0.5" />
-                    <span className="sr-only">Open main menu</span>
-                    {open ? (
-                      <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
-                    ) : (
-                      <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
-                    )}
-                  </Disclosure.Button>
                 </div>
               </div>
             </div>
@@ -290,6 +285,11 @@ const Layout = ({ children }) => {
           {children}
         </div>
       </main>
+      <footer className="bg-primary h-[70px] flex items-center justify-center">
+        <p className="text-center text-white font-medium text-md">
+          {`©${moment().format('YYYY')} ${appName}, All Rights Reserved.`}
+        </p>
+      </footer>
     </div>
   );
 

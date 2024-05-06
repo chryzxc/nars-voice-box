@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import DataTable from 'react-data-table-component';
 import { Input } from '@/components/ui/input';
+import Spinner from './Spinner';
 
 const CustomDataTable = ({
   title,
@@ -12,6 +13,7 @@ const CustomDataTable = ({
   searchable,
   additionalHeader,
   loading,
+  expandableComponent,
 }) => {
   const [filterText, setFilterText] = useState('');
   const [resetPaginationToggle, setResetPaginationToggle] = useState(false);
@@ -48,7 +50,7 @@ const CustomDataTable = ({
   }, [filterText, resetPaginationToggle, additionalHeader, searchable]);
 
   if (loading) {
-    return <div>Loading</div>;
+    return <Spinner />;
   }
 
   return (
@@ -61,6 +63,10 @@ const CustomDataTable = ({
       subHeader={searchable || additionalHeader}
       subHeaderComponent={subHeaderComponentMemo}
       persistTableHead
+      expandableRows={!!expandableComponent}
+      expandableRowsComponent={(data) => (
+        <div className="ml-16 text-sm">{expandableComponent(data)}</div>
+      )}
     />
   );
 };

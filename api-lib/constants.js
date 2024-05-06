@@ -1,7 +1,7 @@
 export const ValidateProps = {
   user: {
     firstName: { type: 'string', minLength: 2, maxLength: 30 },
-    middleName: { type: 'string', minLength: 1, maxLength: 30 },
+    middleName: { type: 'string' },
     lastName: { type: 'string', minLength: 2, maxLength: 30 },
     username: { type: 'string' },
     password: { type: 'string', minLength: 6 },
@@ -22,5 +22,11 @@ export const ValidateProps = {
     patientContactInformation: { type: 'string' },
     patientAddress: { type: 'string' },
     notes: { type: 'string' },
+    status: { type: 'string' },
+  },
+  settings: {
+    email: { type: 'string' },
+    mobileNumber: { type: 'string' },
+    address: { type: 'string' },
   },
 };
