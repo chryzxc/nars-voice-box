@@ -1,9 +1,11 @@
-import { ValidateProps } from '@/api-lib/constants';
-import { findPosts, insertPost } from '@/api-lib/db';
 import { auths, validateBody } from '@/api-lib/middlewares';
+import { findPosts, insertPost } from '@/api-lib/db';
+
+import { ValidateProps } from '@/api-lib/constants';
 import { getMongoDb } from '@/api-lib/mongodb';
-import { ncOpts } from '@/api-lib/nc';
 import nc from 'next-connect';
+import { ncOpts } from '@/api-lib/nc';
+import { newDate } from '@/lib/utils';
 
 const handler = nc(ncOpts);
 
@@ -12,7 +14,7 @@ handler.get(async (req, res) => {
 
   const posts = await findPosts(
     db,
-    req.query.before ? new Date(req.query.before) : undefined,
+    req.query.before ? newDate(req.query.before) : undefined,
     req.query.by,
     req.query.limit ? parseInt(req.query.limit, 10) : undefined
   );

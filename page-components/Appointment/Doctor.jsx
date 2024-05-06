@@ -17,6 +17,7 @@ import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   capitalizeFirstLetter,
   formatHourInDate,
+  newDate,
   sortByDateTime,
   speechRecognitionFilter,
 } from '@/lib/utils';
@@ -139,7 +140,7 @@ export const getDoctorAppointments = async (userId) => {
 const SetSchedule = ({ onClose, defaultTimeSlots }) => {
   const [loading, setLoading] = useState(true);
   const [selectedTimeSlots, setSelectedTimeSlots] = useState(defaultTimeSlots);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(newDate());
 
   const selectTimeSlot = (timeSlot) => {
     if (selectedTimeSlots.includes(timeSlot)) {
@@ -151,7 +152,10 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
     setSelectedTimeSlots((curr) => [...curr, timeSlot]);
   };
 
-  const handleSelectDate = ({ start }) => setSelectedDate(start);
+  const handleSelectDate = ({ start }) => {
+    console.log('start', start);
+    setSelectedDate(start);
+  };
 
   const handleSetDaySchedule = async (e) => {
     e.preventDefault();
@@ -162,7 +166,7 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           timeSlots: selectedTimeSlots,
-          date: new Date(selectedDate),
+          date: newDate(selectedDate),
         }),
       });
       toast.success('Time slots has been successfully updated');
@@ -175,6 +179,7 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
 
   const getData = useCallback(async () => {
     setLoading(true);
+    console.log('selectedDate', { selectedDate, new: new Date(selectedDate) });
     try {
       const { timeSlots = [], allDayUnavailable } =
         (await fetcher(
@@ -399,8 +404,8 @@ const Doctor = ({ speechRecognitionKeyword, asComponent }) => {
           title: `${capitalizeFirstLetter(appointment.patientName)} (${
             appointment.time
           })`,
-          start: new Date(formatHourInDate(appointment.date, appointment.time)),
-          end: new Date(
+          start: newDate(formatHourInDate(appointment.date, appointment.time)),
+          end: newDate(
             formatHourInDate(appointment.date, appointment.time, true)
           ),
           data: appointment,

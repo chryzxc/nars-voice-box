@@ -1,16 +1,18 @@
-import { ValidateProps } from '@/api-lib/constants';
+import { CONFIG as MAIL_CONFIG, sendMail } from '@/api-lib/mail';
 import {
+  UNSAFE_updateUserPassword,
   createToken,
   findAndDeleteTokenByIdAndType,
   findUserByEmail,
-  UNSAFE_updateUserPassword,
 } from '@/api-lib/db';
-import { CONFIG as MAIL_CONFIG, sendMail } from '@/api-lib/mail';
-import { validateBody } from '@/api-lib/middlewares';
+
+import { ValidateProps } from '@/api-lib/constants';
 import { getMongoDb } from '@/api-lib/mongodb';
-import { ncOpts } from '@/api-lib/nc';
 import nc from 'next-connect';
+import { ncOpts } from '@/api-lib/nc';
+import { newDate } from '@/lib/utils';
 import normalizeEmail from 'validator/lib/normalizeEmail';
+import { validateBody } from '@/api-lib/middlewares';
 
 const handler = nc(ncOpts);
 
@@ -38,7 +40,7 @@ handler.post(
     const token = await createToken(db, {
       creatorId: user._id,
       type: 'passwordReset',
-      expireAt: new Date(Date.now() + 1000 * 60 * 20),
+      expireAt: newDate(Date.now() + 1000 * 60 * 20),
     });
 
     await sendMail({

@@ -1,4 +1,4 @@
-import { getStartAndEndDate } from '@/lib/utils';
+import { getStartAndEndDate, newDate } from '@/lib/utils';
 
 export async function findUserDefaultTimeSlots(db, userId) {
   return db.collection('default_time_slots').findOne({
@@ -20,6 +20,7 @@ export async function setDefaultTimeSlots(db, { userId, timeSlots }) {
 
 export async function findUserDaytimeSlots(db, { userId, date }) {
   const { startDate, endDate } = getStartAndEndDate(date);
+  console.log({ startDate, endDate });
   return db.collection('daytime_slots').findOne({
     userId,
     date: {
@@ -30,8 +31,8 @@ export async function findUserDaytimeSlots(db, { userId, date }) {
 }
 
 export async function setDaytimeSlots(db, data) {
-  const filter = { date: data.date };
-  const update = { $set: { ...data, date: data.date } };
+  const filter = { date: newDate(data.date) };
+  const update = { $set: { ...data, date: newDate(data.date) } };
 
   const result = await db
     .collection('daytime_slots')

@@ -1,14 +1,15 @@
 import { Avatar } from '@/components/Avatar';
 import { Container } from '@/components/Layout';
-import { format } from '@lukeed/ms';
-import clsx from 'clsx';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import clsx from 'clsx';
+import { format } from '@lukeed/ms';
+import { newDate } from '@/lib/utils';
 import styles from './Comment.module.css';
+import { useMemo } from 'react';
 
 const Comment = ({ comment, className }) => {
   const timestampTxt = useMemo(() => {
-    const diff = Date.now() - new Date(comment.createdAt).getTime();
+    const diff = Date.now() - newDate(comment.createdAt).getTime();
     if (diff < 1 * 60 * 1000) return 'Just now';
     return `${format(diff, true)} ago`;
   }, [comment.createdAt]);

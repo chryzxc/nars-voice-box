@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { dbProjectionUsers } from './user';
+import { newDate } from '@/lib/utils';
 
 export async function findPostById(db, id) {
   const posts = await db
@@ -53,7 +54,7 @@ export async function insertPost(db, { content, creatorId }) {
   const post = {
     content,
     creatorId,
-    createdAt: new Date(),
+    createdAt: newDate(),
   };
   const { insertedId } = await db.collection('posts').insertOne(post);
   post._id = insertedId;

@@ -1,10 +1,12 @@
+import { auths, validateBody } from '@/api-lib/middlewares';
+import { findComments, insertComment } from '@/api-lib/db/comment';
+
 import { ValidateProps } from '@/api-lib/constants';
 import { findPostById } from '@/api-lib/db';
-import { findComments, insertComment } from '@/api-lib/db/comment';
-import { auths, validateBody } from '@/api-lib/middlewares';
 import { getMongoDb } from '@/api-lib/mongodb';
-import { ncOpts } from '@/api-lib/nc';
 import nc from 'next-connect';
+import { ncOpts } from '@/api-lib/nc';
+import { newDate } from '@/lib/utils';
 
 const handler = nc(ncOpts);
 
@@ -20,7 +22,7 @@ handler.get(async (req, res) => {
   const comments = await findComments(
     db,
     req.query.postId,
-    req.query.before ? new Date(req.query.before) : undefined,
+    req.query.before ? newDate(req.query.before) : undefined,
     req.query.limit ? parseInt(req.query.limit, 10) : undefined
   );
 

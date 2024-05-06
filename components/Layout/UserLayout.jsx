@@ -86,7 +86,7 @@ export const links = [
     icon: SettingsIcon,
     href: '/settings',
     isActive: false,
-    roles: [userRole.admin],
+    roles: Object.values(userRole).map(String),
   },
 ];
 

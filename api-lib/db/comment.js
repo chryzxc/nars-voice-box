@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { dbProjectionUsers } from '.';
+import { newDate } from '@/lib/utils';
 
 export async function findComments(db, postId, before, limit = 10) {
   return db
@@ -32,7 +33,7 @@ export async function insertComment(db, postId, { content, creatorId }) {
     content,
     postId: new ObjectId(postId),
     creatorId,
-    createdAt: new Date(),
+    createdAt: newDate(),
   };
   const { insertedId } = await db.collection('comments').insertOne(comment);
   comment._id = insertedId;

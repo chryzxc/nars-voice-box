@@ -1,11 +1,12 @@
+import Head from 'next/head';
+import { UserPost } from '@/page-components/UserPost';
 import { findPostById } from '@/api-lib/db';
 import { getMongoDb } from '@/api-lib/mongodb';
-import { UserPost } from '@/page-components/UserPost';
-import Head from 'next/head';
+import { newDate } from '@/lib/utils';
 
 export default function UserPostPage({ post }) {
   if (typeof post.createdAt !== 'string') {
-    post.createdAt = new Date(post.createdAt);
+    post.createdAt = newDate(post.createdAt);
   }
   return (
     <>

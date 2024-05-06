@@ -31,6 +31,7 @@ import {
   formatHourInDate,
   formatString,
   isDoctor,
+  newDate,
   sortByDateTime,
   speechRecognitionFilter,
 } from '@/lib/utils';
@@ -126,10 +127,10 @@ const Nurse = ({ speechRecognitionKeyword, asComponent }) => {
           title: `${capitalizeFirstLetter(bookedAppointment.patientName)} (${
             bookedAppointment.doctor.firstName
           } ${bookedAppointment.time})`,
-          start: new Date(
+          start: newDate(
             formatHourInDate(bookedAppointment.date, bookedAppointment.time)
           ),
-          end: new Date(
+          end: newDate(
             formatHourInDate(
               bookedAppointment.date,
               bookedAppointment.time,

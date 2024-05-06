@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { dbProjectionUsers } from '.';
+import { newDate } from '@/lib/utils';
 
 export async function findAttendance(db, userId, before) {
   return db
@@ -32,7 +33,7 @@ export async function insertAttendance(db, postId, { content, creatorId }) {
     content,
     postId: new ObjectId(postId),
     creatorId,
-    createdAt: new Date(),
+    createdAt: newDate(),
   };
   const { insertedId } = await db
     .collection('attendance')
@@ -44,7 +45,7 @@ export async function insertAttendance(db, postId, { content, creatorId }) {
 export async function timeIn(db, { userId }) {
   const attendance = {
     userId,
-    timeIn: new Date(),
+    timeIn: newDate(),
     timeOut: null,
   };
   const { insertedId } = await db
@@ -59,7 +60,7 @@ export async function timeOut(db, attendanceId) {
     .collection('attendance')
     .findOneAndUpdate(
       { _id: new ObjectId(attendanceId) },
-      { $set: { timeOut: new Date() } },
+      { $set: { timeOut: newDate() } },
       { returnDocument: 'after' }
     )
     .then(({ value }) => value);

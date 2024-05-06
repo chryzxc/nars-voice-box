@@ -1,6 +1,7 @@
+import { capitalizeFirstLetter, newDate } from '@/lib/utils';
+
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
-import { capitalizeFirstLetter } from '@/lib/utils';
 import normalizeEmail from 'validator/lib/normalizeEmail';
 import { temporaryPassword } from '@/lib/constants';
 
@@ -66,7 +67,7 @@ export async function insertUser(
   };
 
   const user = {
-    created: new Date(),
+    created: newDate(),
     emailVerified: false,
     temporaryPasswordChanged: false,
     profilePicture: null,

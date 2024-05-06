@@ -1,4 +1,5 @@
 import { ObjectId } from 'mongodb';
+import { newDate } from '@/lib/utils';
 
 export async function getSettings(db) {
   return db.collection('settings').findOne();
@@ -12,7 +13,7 @@ export async function updateSettings(db, data) {
     {
       $set: {
         ...data,
-        updated: new Date(),
+        updated: newDate(),
       },
     },
     { upsert: true }
