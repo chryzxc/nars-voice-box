@@ -26,6 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import CustomDataTable from '@/components/CustomDataTable';
 import Spinner from '@/components/Spinner';
+import { appointmentStatuses } from '@/lib/constants';
 import dayjs from 'dayjs';
 import { fetcher } from '@/lib/fetch';
 import moment from 'moment';
@@ -124,10 +125,13 @@ const timeSlotsArr = [
 ];
 
 export const getDoctorAppointments = async (userId) => {
-  const results = await fetcher(`/api/appointment?doctorUserId=${userId}`, {
-    method: 'GET',
-    headers: { 'Content-Type': 'application/json' },
-  });
+  const results = await fetcher(
+    `/api/appointment?doctorUserId=${userId}&status=${appointmentStatuses.pending}`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    }
+  );
   return results;
   return results.filter((result) => moment(result.date).isAfter(moment()));
 };
@@ -158,7 +162,7 @@ const SetSchedule = ({ onClose, defaultTimeSlots }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           timeSlots: selectedTimeSlots,
-          date: selectedDate,
+          date: new Date(selectedDate),
         }),
       });
       toast.success('Time slots has been successfully updated');

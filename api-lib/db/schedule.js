@@ -30,8 +30,8 @@ export async function findUserDaytimeSlots(db, { userId, date }) {
 }
 
 export async function setDaytimeSlots(db, data) {
-  const filter = { date: new Date(data.date) };
-  const update = { $set: { ...data, date: new Date(data.date) } };
+  const filter = { date: data.date };
+  const update = { $set: { ...data, date: data.date } };
 
   const result = await db
     .collection('daytime_slots')
