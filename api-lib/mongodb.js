@@ -1,5 +1,7 @@
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
+import momentTimeZone from 'moment-timezone';
+import { timeZone } from '@/lib/constants';
 
 let indexesCreated = false;
 async function createIndexes(client) {
@@ -75,6 +77,7 @@ export async function initializeConnection() {
 
 export async function getMongoDb() {
   try {
+    momentTimeZone.tz.setDefault(timeZone);
     await initializeConnection();
     const mongoClient = await getMongoClient();
     return mongoClient.db();
