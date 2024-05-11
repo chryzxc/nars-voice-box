@@ -107,11 +107,11 @@ and transforming patient experiences.`}</p>
           <p className="text-3xl font-bold text-primary text-center">
             Get in touch with one of our friendly team members
           </p>
-          <p className="text-gray-500 text-lg">
+          <p className="text-gray-500 text-lg text-center">
             Were here to help! if you have technical, account, or billing
             questions.
           </p>
-          <div className="mt-10 flex flex-col gap-4">
+          <div className="mt-10 flex flex-col gap-0 md:gap-4">
             <div className="grid grid-cols-4 items-center">
               <div className="flex flex-row gap-4 items-center col-span-2">
                 <AtSignIcon className="text-primary" />

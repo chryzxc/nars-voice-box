@@ -163,7 +163,7 @@ const Layout = ({ children }) => {
                     </div>
                   </div>
                 </div>
-                <div className="hidden md:block">
+                <div>
                   <div className="ml-4 flex items-center md:ml-6">
                     <LoginButton />
 
