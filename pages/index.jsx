@@ -40,20 +40,23 @@ const IndexPage = () => {
   }, [user, router, isLoading]);
 
   return (
-    <div>
-      <section className=" dark:bg-gray-900 h-[80vh]" id="home">
-        <div className="grid max-w-screen-xl px-4 py-8 mx-auto lg:gap-8 xl:gap-0 lg:py-16 lg:grid-cols-12 gap-4">
-          <div className="mr-auto place-self-center lg:col-span-7">
-            <p className="text-secondary max-w-2xl font-bold md:text-lg lg:text-xl text-black">
+    <div className="flex flex-col">
+      <section
+        className=" dark:bg-gray-900 h-auto min-h-full lg:min-h-[100vh]"
+        id="home"
+      >
+        <div className="flex flex-col lg:grid max-w-screen-xl px-4 py-8 mx-auto lg:gap-8 xl:gap-0 lg:py-16 lg:grid-cols-12 gap-4">
+          <div className="mr-auto place-self-center w-full  lg:col-span-7">
+            <p className="text-center lg:text-left text-secondary font-bold md:text-lg lg:text-xl text-black">
               We provide all healthcare solutions
             </p>
-            <h1 className="max-w-2xl text-2xl font-bold tracking-tight leading-none md:text-5xl xl:text-6xl text-primary">
+            <h1 className="text-xl font-bold tracking-tight leading-none md:text-3xl xl:text-6xl text-primary text-center lg:text-left ">
               Effortlessly Efficient: Nursing care that saves time and soothes
               souls
             </h1>
           </div>
           <div className="mt-0 col-span-5 flex justify-center ">
-            <img src="/images/MCU 1.png" alt="mockup" className="w-full" />
+            <img src="/images/MCU 1.png" alt="mockup" />
           </div>
         </div>
       </section>
